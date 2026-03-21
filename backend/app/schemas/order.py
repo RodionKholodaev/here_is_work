@@ -3,7 +3,6 @@ from datetime import datetime
 
 class OrderScheme(BaseModel):
     area: float
-    adress: str
     comment: str  
     user_id: int
     type: str
@@ -16,8 +15,10 @@ class OrderResponce(BaseModel):
     time_end: datetime
     user_id: int
     order_id: int | None = None
+
+class AdressScheme(BaseModel):
+    adress: str
+
+class CoordinatesSchema(BaseModel):
     latitude: float
     longitude: float
-
-
-    
