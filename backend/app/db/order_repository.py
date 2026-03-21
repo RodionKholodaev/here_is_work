@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import Order
 from app.schemas.order import OrderScheme, OrderResponce
+from sqlalchemy import select
+from fastapi import HTTPException
 
 class OrderRepository:
     @staticmethod
@@ -9,7 +11,7 @@ class OrderRepository:
         order = Order(
             client_id = data1.user_id,
             type = data1.type,
-            area = data1.area
+            area = data1.area,
             comment = data1.comment,
             time_start = data2.time_start,
             time_end = data2.time_end,
@@ -25,77 +27,36 @@ class OrderRepository:
         return order
 
     @staticmethod
-    async def add_worker(session: AsyncSession, worker_id: int):
-        
+    async def add_worker(session: AsyncSession, worker_id: int, order_id: int):
 
-# имею вот это
+        result = await session.execute(
+            select(Order).where(Order.id == order_id)
+        )
+        order = result.scalar_one_or_none()
 
-# class OrderScheme(BaseModel):
-#     adress: str
-#     service: str
-#     area: float
-#     comment: str  
-#     user_id: int
-#     token: str
-#     type: str
-#     urgency: str
-#     status: str
+        if order is None:
+            raise HTTPException(401, "Invalid worker_id")
 
+        order.worker_id = worker_id
 
-# class OrderResponce(BaseModel):
-#     price: float
-#     time_start: datetime
-#     time_end: datetime
-#     user_id: int
-    
-# надо
-# class Order(Base):
-#     __tablename__ = "orders"
+        await session.commit()
+        await session.refresh(order)
 
+        return order
 
+    @staticmethod
+    async def change_status(session: AsyncSession, order_id: int, status: str):
+        result = await session.execute(
+            select(Order).where(Order.id == order_id)
+        )
+        order = result.scalar_one_or_none()
 
-# async def register(session: AsyncSession, name: str, password: str, role: str, adress: str):
-#     # проверка, есть ли пользователь
-#     result = await session.execute(
-#         select(User).where(User.name == name)
-#     )
-#     existing = result.scalar_one_or_none()
+        if order is None:
+            raise HTTPException(401, "Invalid worker_id")
+        order.status = status
 
-#     if existing:
-#         raise HTTPException(400, "User already exists")
+        await session.commit()
+        await session.refresh(order)
 
-    
-#     result = await get_coordinates(adress)
-#     if result is None: raise ValueError("Не получилось узнать координаты")
-#     latitude, longitude = result
+        return order
 
-#     user = User(
-#         name=name,
-#         password_hash=hash_password(password),
-#         role=role,
-#         latitude = latitude,
-#         longitude = longitude
-#     )
-
-#     session.add(user)
-#     await session.commit()
-#     await session.refresh(user)
-
-#     return user
-
-
-# async def login(session: AsyncSession, name: str, password: str):
-#     result = await session.execute(
-#         select(User).where(User.name == name)
-#     )
-#     user = result.scalar_one_or_none()
-
-#     if not user or not verify_password(password, user.password_hash):
-#         raise HTTPException(401, "Invalid credentials")
-
-#     token = generate_token()
-#     user.token = token
-
-#     await session.commit()
-
-#     return token, user
