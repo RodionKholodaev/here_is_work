@@ -1,18 +1,15 @@
 from datetime import datetime, time
 from typing import Optional
 from sqlalchemy import JSON
-from sqlalchemy import ForeignKey, String, Text, Integer, Boolean, TIMESTAMP, Numeric
+from sqlalchemy import ForeignKey, String, Text, Integer, Boolean, TIMESTAMP, Numeric, Float
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
-# 🔹 Base
-
+# Base
 class Base(DeclarativeBase):
     pass
 
-
-# пользователь (заказчик)
 
 class User(Base):
     __tablename__ = "users"
@@ -22,27 +19,30 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     role: Mapped[str] = mapped_column(String(20))  # client / worker
-    telegram_id: Mapped[Optional[int]] = mapped_column(nullable=True)
-    address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    address: Mapped[Optional[str]] = mapped_column(Text, nullable=False)
 
+    # координаты (долгота и широта)
+    latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, default=datetime.utcnow
     )
 
     # relationships
-    worker_profile: Mapped[Optional["WorkerProfile"]] = relationship(
-        back_populates="user", uselist=False
-    )
+    # worker_profile: Mapped[Optional["WorkerProfile"]] = relationship(
+    #     back_populates="user", uselist=False
+    # )
 
-    client_orders: Mapped[list["Order"]] = relationship(
-        back_populates="client",
-        foreign_keys="Order.client_id"
-    )
+    # client_orders: Mapped[list["Order"]] = relationship(
+    #     back_populates="client",
+    #     foreign_keys="Order.client_id"
+    # )
 
-    worker_orders: Mapped[list["Order"]] = relationship(
-        back_populates="worker",
-        foreign_keys="Order.worker_id"
-    )
+    # worker_orders: Mapped[list["Order"]] = relationship(
+    #     back_populates="worker",
+    #     foreign_keys="Order.worker_id"
+    # )
 
 
 # профиль рабочего
@@ -53,14 +53,20 @@ class WorkerProfile(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
+    address: Mapped[Optional[str]] = mapped_column(Text, nullable=False)
+    # координаты (долгота и широта)
+    latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    
     work_radius: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     available_from: Mapped[Optional[time]] = mapped_column(nullable=True)
     available_to: Mapped[Optional[time]] = mapped_column(nullable=True)
 
     is_active: Mapped[bool] = mapped_column(default=True)
+    location: Mapped[str] = mapped_column()
 
-    # relationships
-    user: Mapped["User"] = relationship(back_populates="worker_profile")
+    # # relationships
+    # user: Mapped["User"] = relationship(back_populates="worker_profile")
 
 
 # заказы
@@ -77,11 +83,13 @@ class Order(Base):
 
     type: Mapped[str] = mapped_column(String(50))
 
-    polygon: Mapped[dict] = mapped_column(JSON)
+    area: Mapped[float] = mapped_column(Numeric(10, 2))
 
     comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    scheduled_time: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    time_start: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    time_end: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+
     urgency: Mapped[str] = mapped_column(String(20))  # asap / scheduled
 
     status: Mapped[str] = mapped_column(String(20))
