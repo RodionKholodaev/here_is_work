@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import './App.css'
 
+const YANDEX_MAP_EMBED_URL =
+  'https://yandex.ru/map-widget/v1/?ll=37.588144%2C55.733842&z=10&lang=ru_RU'
+
 const navItems = [
   { id: 'how', label: 'Как работает' },
   { id: 'pricing', label: 'Тарифы' },
@@ -293,35 +296,31 @@ export default function App() {
               alignItems: 'center',
               justifyContent: 'center',
               padding: '24px',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
             <div
               style={{
-                textAlign: 'center',
-                color: '#94a3b8',
+                position: 'absolute',
+                inset: '24px',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                background: '#e5e7eb',
               }}
             >
-              <div
+              <iframe
+                src={YANDEX_MAP_EMBED_URL}
+                title="Яндекс Карта"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                allowFullScreen
                 style={{
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  marginBottom: '10px',
+                  display: 'block',
+                  border: '0',
                 }}
-              >
-                Placeholder
-              </div>
-
-              <div
-                style={{
-                  fontSize: '36px',
-                  fontWeight: 800,
-                  lineHeight: 1,
-                }}
-              >
-                КАРТА
-              </div>
+              />
             </div>
           </section>
         </main>
