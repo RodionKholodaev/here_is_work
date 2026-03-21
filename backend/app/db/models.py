@@ -98,12 +98,12 @@ class Order(Base):
 
     urgency: Mapped[str] = mapped_column(String(20))  # asap / scheduled
 
-    status: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20)) # created, searching, assigned, in_progress, done, cancelled
 
     price: Mapped[float] = mapped_column(Numeric(10, 2))
 
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow
+        TIMESTAMP, server_default=func.now()
     )
 
     # # relationships

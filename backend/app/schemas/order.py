@@ -8,6 +8,7 @@ class OrderScheme(BaseModel):
     type: str
     urgency: str
     status: str
+    id: int | None = None
 
 class OrderResponce(BaseModel):
     price: float
