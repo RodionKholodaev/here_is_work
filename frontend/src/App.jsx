@@ -69,6 +69,10 @@ export default function App() {
     console.log(`Продолжить: ${selectedServiceData.title}`, address)
   }
 
+  const handleAddressSubmit = () => {
+    console.log('Ввод адреса:', address)
+  }
+
   return (
     <div
       className="appShell"
@@ -183,7 +187,10 @@ export default function App() {
                 borderRadius: '18px',
                 background: 'var(--surface)',
                 boxShadow: 'var(--shadow-soft)',
-                padding: '10px 12px',
+                padding: '6px 6px 6px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
               }}
             >
               <input
@@ -200,8 +207,39 @@ export default function App() {
                   fontSize: '15px',
                   fontWeight: 600,
                   lineHeight: 1.2,
+                  minWidth: 0,
                 }}
               />
+              <button
+                type="button"
+                onClick={handleAddressSubmit}
+                style={{
+                  flex: '0 0 auto',
+                  minWidth: '72px',
+                  height: '36px',
+                  border: '2px solid var(--stroke)',
+                  borderRadius: '12px',
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent)',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  padding: '0 14px',
+                  transition:
+                    'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease',
+                  boxShadow: 'var(--shadow-soft)',
+                }}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.transform = 'translateY(-1px)'
+                  event.currentTarget.style.background = '#bfdbfe'
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.transform = 'translateY(0)'
+                  event.currentTarget.style.background = 'var(--accent-soft)'
+                }}
+              >
+                Ввод
+              </button>
             </div>
 
             <div
