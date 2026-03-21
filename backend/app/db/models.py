@@ -87,7 +87,9 @@ class Order(Base):
 
     comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    scheduled_time: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    time_start: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    time_end: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+
     urgency: Mapped[str] = mapped_column(String(20))  # asap / scheduled
 
     status: Mapped[str] = mapped_column(String(20))
