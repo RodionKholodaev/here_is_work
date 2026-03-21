@@ -1,7 +1,7 @@
 from datetime import datetime, time
 from typing import Optional
 from sqlalchemy import JSON
-from sqlalchemy import ForeignKey, String, Text, Integer, Boolean, TIMESTAMP, Numeric, Float
+from sqlalchemy import ForeignKey, String, Text, Integer, Boolean, TIMESTAMP, Numeric, Float, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -14,19 +14,22 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    password_hash: Mapped[str] = mapped_column(String(255))
-    token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True) # Токен для передачи в запросах, чтобы понимать что за пользователь
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
-    role: Mapped[str] = mapped_column(String(20))  # client / worker
-    address: Mapped[Optional[str]] = mapped_column(Text, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    role: Mapped[str] = mapped_column(String(20), nullable=False)  # client / worker
+    
+    address: Mapped[str] = mapped_column(Text, nullable=False)
 
-    # координаты (долгота и широта)
     latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     
+    # время ставит бд
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow
+        TIMESTAMP, server_default=func.now()
     )
 
     # relationships

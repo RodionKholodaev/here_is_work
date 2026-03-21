@@ -6,25 +6,24 @@ from app.db.database import get_session
 from app.db.order_repository import OrderRepository
 from app.services.time_service import TimeService
 from app.services.price_service import PriceService
-from app.services.geo_service import get_coordinates
 router = APIRouter(prefix="/order", tags=["order"])
 
 
-@router.post("/get-coordinates", response_model=CoordinatesSchema)
-async def coordinates_route(
-    data: AdressScheme,
-    session: AsyncSession = Depends(get_session),
-):
-    res= await get_coordinates(data.adress)
-    print(data.adress)
-    if res is None: raise ValueError("Не получилось определить координаты")
+# @router.post("/get-coordinates", response_model=CoordinatesSchema)
+# async def coordinates_route(
+#     data: AdressScheme,
+#     session: AsyncSession = Depends(get_session),
+# ):
+#     res= await get_coordinates(data.adress)
+#     print(data.adress)
+#     if res is None: raise ValueError("Не получилось определить координаты")
     
-    latitude, longitude = res
+#     latitude, longitude = res
 
-    return CoordinatesSchema(
-        latitude=latitude,
-        longitude=longitude
-    )
+#     return CoordinatesSchema(
+#         latitude=latitude,
+#         longitude=longitude
+#     )
 
 
 @router.post("/get-order-info", response_model=OrderResponce)

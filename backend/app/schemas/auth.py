@@ -1,21 +1,15 @@
 from pydantic import BaseModel, EmailStr
 
 class RegisterRequest(BaseModel):
-    email: EmailStr  # Pydantic сам проверит формат name@domain.com
+    email: EmailStr  
     password: str
     name: str
     role: str
     address: str
 
-# class RegisterRequest(BaseModel):
-#     name: str
-#     password: str
-#     role: str  # client / worker
-#     adress: str
-
 
 class LoginRequest(BaseModel):
-    name: str
+    email: EmailStr
     password: str
 
 

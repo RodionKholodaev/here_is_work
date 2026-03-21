@@ -5,27 +5,17 @@ from fastapi import HTTPException
 from app.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 # инструмент шифрования
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
-    """
-    Принимает "сырой" пароль и превращает его в нечитаемый хеш.
-    Хеш включает в себя 'соль' (случайные данные), поэтому даже
-    одинаковые пароли у разных юзеров будут выглядеть в БД по-разному.
-    """
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Сравнивает введенный пароль с тем, что лежит в базе.
-    Внутри происходит магия: passlib берет соль из хеша, подсаливает 
-    введенный пароль и проверяет, совпал ли результат.
-    """
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_access_token(data: dict):
+def create_access_token(data: dict) -> str:
     """
-    Создает JWT (JSON Web Token) — цифровой "пропуск" для пользователя.
+    Создает JWT токен, в нем пречем данные которые нам хочется удобно из него доставать
     """
     # Копируем данные (например, {'sub': 'user_id'}), чтобы не менять оригинал
     to_encode = data.copy()
@@ -36,7 +26,7 @@ def create_access_token(data: dict):
     
     # Добавляем поле "exp" (expiration time) в полезную нагрузку (payload)
     # По этому полю библиотека поймет, что токен "протух"
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire}) # добавляем в словарь время когда токен уже не действителен
     
     # Финальный этап: склеиваем данные и подписываем их нашим SECRET_KEY.
     # Если кто-то изменит хоть один символ в токене, подпись станет невалидной.

@@ -14,7 +14,7 @@ async def register_route(
     data: RegisterRequest,
     session: AsyncSession = Depends(get_session),
 ):
-    user = await AuthRepository.register(session, data.name, data.password, data.role, data.adress)
+    user = await AuthRepository.register(session, data.name, data.password, data.role, data.address, data.email)
 
     return AuthResponse(
         token="login_required",
@@ -27,7 +27,7 @@ async def login_route(
     data: LoginRequest,
     session: AsyncSession = Depends(get_session),
 ):
-    token, user = await AuthRepository.login(session, data.name, data.password)
+    token, user = await AuthRepository.login(session, data.email, data.password)
 
     return AuthResponse(
         token=token,
