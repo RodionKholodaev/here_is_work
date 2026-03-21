@@ -56,7 +56,7 @@ class WorkerProfile(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
-    address: Mapped[Optional[str]] = mapped_column(Text, nullable=False)
+    address: Mapped[str] = mapped_column(nullable=False)
     # координаты (долгота и широта)
     latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -66,7 +66,6 @@ class WorkerProfile(Base):
     available_to: Mapped[Optional[time]] = mapped_column(nullable=True)
 
     is_active: Mapped[bool] = mapped_column(default=True)
-    location: Mapped[str] = mapped_column()
 
     # # relationships
     # user: Mapped["User"] = relationship(back_populates="worker_profile")

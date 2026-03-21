@@ -30,7 +30,7 @@ def create_access_token(data: dict) -> str:
     
     # Финальный этап: склеиваем данные и подписываем их нашим SECRET_KEY.
     # Если кто-то изменит хоть один символ в токене, подпись станет невалидной.
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) #type: ignore
     
     return encoded_jwt
 
@@ -39,7 +39,7 @@ def decode_access_token(token: str) -> dict:
         # jwt.decode делает две вещи сразу:
         # 1. Проверяет подпись (не изменил ли кто-то данные внутри)
         # 2. Проверяет срок годности "exp" (не протух ли токен)
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) #type: ignore
         
         # Если всё ок, возвращаем словарь с данными (например, {"sub": "123", "exp": ...})
         return payload
