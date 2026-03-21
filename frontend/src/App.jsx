@@ -70,9 +70,58 @@ export default function App() {
   }
 
   return (
-    <div className="appShell">
-      <div className="pageFrame">
-        <header className="topBar">
+    <div
+      className="appShell"
+      style={{
+        position: 'relative',
+        minHeight: '100vh',
+      }}
+    >
+      <div
+        className="pageFrame"
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          minHeight: '100vh',
+          background: 'transparent',
+          boxShadow: 'none',
+          border: 'none',
+        }}
+      >
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 0,
+            overflow: 'hidden',
+            borderRadius: 'inherit',
+            background: '#e5e7eb',
+          }}
+        >
+          <iframe
+            src={YANDEX_MAP_EMBED_URL}
+            title="Яндекс Карта"
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            allowFullScreen
+            style={{
+              display: 'block',
+              border: '0',
+              width: '100%',
+              height: '100%',
+            }}
+          />
+        </div>
+
+        <header
+          className="topBar"
+          style={{
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
           <button
             type="button"
             className="logoButton"
@@ -105,11 +154,9 @@ export default function App() {
 
         <main
           style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '20px',
             marginTop: '20px',
-            alignItems: 'stretch',
+            position: 'relative',
+            zIndex: 2,
           }}
         >
           <aside
@@ -282,47 +329,6 @@ export default function App() {
               </button>
             </div>
           </aside>
-
-          <section
-            aria-hidden="true"
-            style={{
-              flex: '1 1 420px',
-              minHeight: '690px',
-              border: '2px solid rgba(31, 41, 55, 0.18)',
-              borderRadius: '28px',
-              background:
-                'linear-gradient(180deg, rgba(255,255,255,0.75) 0%, rgba(241,245,249,0.85) 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '24px',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                inset: '24px',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                background: '#e5e7eb',
-              }}
-            >
-              <iframe
-                src={YANDEX_MAP_EMBED_URL}
-                title="Яндекс Карта"
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allowFullScreen
-                style={{
-                  display: 'block',
-                  border: '0',
-                }}
-              />
-            </div>
-          </section>
         </main>
       </div>
     </div>
