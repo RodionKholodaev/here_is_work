@@ -3,7 +3,7 @@ from app.api.routes import auth #, orders, users
 from app.db.models import Base
 from app.db.database import engine
 
-app = FastAPI(title="Yard Cleanup MVP")
+app = FastAPI(title="Dvornic Go")
 
 app.include_router(auth.router)
 

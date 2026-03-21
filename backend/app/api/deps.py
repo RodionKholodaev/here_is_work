@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.models import User
 
-# 🔹 dependency для получения пользователя по токену
+# dependency для получения пользователя по токену
 async def get_current_user(
     authorization: str = Header(...),
     session: AsyncSession = Depends(get_session)

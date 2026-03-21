@@ -1,15 +1,12 @@
 import secrets
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+import hashlib
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
+    """Временное хеширование (не для production!)"""
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def verify_password(password: str, hashed: str) -> bool:
-    return pwd_context.verify(password, hashed)
+    return hashlib.sha256(password.encode()).hexdigest() == hashed
 
 
 def generate_token() -> str:
