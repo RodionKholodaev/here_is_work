@@ -84,6 +84,10 @@ class Order(Base):
     type: Mapped[str] = mapped_column(String(50))
 
     area: Mapped[float] = mapped_column(Numeric(10, 2))
+    
+    # координаты (долгота и широта)
+    latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
@@ -100,26 +104,26 @@ class Order(Base):
         TIMESTAMP, default=datetime.utcnow
     )
 
-    # relationships
-    client: Mapped["User"] = relationship(
-        back_populates="client_orders",
-        foreign_keys=[client_id]
-    )
+    # # relationships
+    # client: Mapped["User"] = relationship(
+    #     back_populates="client_orders",
+    #     foreign_keys=[client_id]
+    # )
 
-    worker: Mapped[Optional["User"]] = relationship(
-        back_populates="worker_orders",
-        foreign_keys=[worker_id]
-    )
+    # worker: Mapped[Optional["User"]] = relationship(
+    #     back_populates="worker_orders",
+    #     foreign_keys=[worker_id]
+    # )
 
-    payment: Mapped[Optional["Payment"]] = relationship(
-        back_populates="order",
-        uselist=False
-    )
+    # payment: Mapped[Optional["Payment"]] = relationship(
+    #     back_populates="order",
+    #     uselist=False
+    # )
 
-    review: Mapped[Optional["Review"]] = relationship(
-        back_populates="order",
-        uselist=False
-    )
+    # review: Mapped[Optional["Review"]] = relationship(
+    #     back_populates="order",
+    #     uselist=False
+    # )
 
 
 # платежи
@@ -139,8 +143,8 @@ class Payment(Base):
         TIMESTAMP, default=datetime.utcnow
     )
 
-    # relationships
-    order: Mapped["Order"] = relationship(back_populates="payment")
+    # # relationships
+    # order: Mapped["Order"] = relationship(back_populates="payment")
 
 
 # отзывы
@@ -162,5 +166,5 @@ class Review(Base):
         TIMESTAMP, default=datetime.utcnow
     )
 
-    # relationships
-    order: Mapped["Order"] = relationship(back_populates="review")
+    # # relationships
+    # order: Mapped["Order"] = relationship(back_populates="review")

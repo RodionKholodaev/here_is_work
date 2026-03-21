@@ -6,7 +6,10 @@ from app.db.database import get_session
 from app.db.order_repository import OrderRepository
 from app.services.time_service import TimeService
 from app.services.price_service import PriceService
+from app.services.geo_service import get_coordinates
 router = APIRouter(prefix="/order", tags=["order"])
+
+
 
 
 @router.get("/get-order-info", response_model=OrderResponce)
@@ -18,11 +21,19 @@ async def order_route(
     price = PriceService.get_price()
     user_id = data.user_id
     
+    res= await get_coordinates(data.adress)
+    print(data.adress)
+    if res is None: raise ValueError("Не получилось определить координаты")
+    
+    latitude, longitude = res
+
     data2 = OrderResponce(
         price=price,
         time_start=time_start,
         time_end=time_end,
-        user_id=user_id
+        user_id=user_id,
+        latitude=latitude,
+        longitude=longitude
     )
 
     order = await OrderRepository.make_order(session, data, data2)

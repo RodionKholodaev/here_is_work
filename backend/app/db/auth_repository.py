@@ -26,6 +26,7 @@ class AuthRepository:
             name=name,
             password_hash=hash_password(password),
             role=role,
+            address = adress,
             latitude = latitude,
             longitude = longitude
         )
