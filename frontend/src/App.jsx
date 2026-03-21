@@ -69,10 +69,36 @@ export default function App() {
     console.log(`Продолжить: ${selectedServiceData.title}`, address)
   }
 
-  const handleAddressSubmit = () => {
-    console.log('Ввод адреса:', address)
-  }
+  const handleAddressSubmit = async () => {
+    console.log('Ввод адреса:', address);
 
+    try {
+      console.log('Отправляем запрос...');
+
+      const response = await fetch(
+        'http://127.0.0.1:8000/order/get-coordinates',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            adress: address
+          }),
+        }
+      );
+
+      console.log('Ответ получен:', response);
+
+      const data = await response.json();
+
+      console.log('JSON получен:', data);
+
+    } catch (error) {
+      console.error('Ошибка запроса:', error);
+    }
+  };
+  
   return (
     <div
       className="appShell"
