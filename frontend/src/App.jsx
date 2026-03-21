@@ -78,6 +78,32 @@ export default function App() {
       }}
     >
       <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          overflow: 'hidden',
+          background: '#e5e7eb',
+        }}
+      >
+        <iframe
+          src={YANDEX_MAP_EMBED_URL}
+          title="Яндекс Карта"
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          allowFullScreen
+          style={{
+            display: 'block',
+            border: '0',
+            width: '100%',
+            height: '100%',
+          }}
+        />
+      </div>
+
+      <div
         className="pageFrame"
         style={{
           position: 'relative',
@@ -86,40 +112,15 @@ export default function App() {
           background: 'transparent',
           boxShadow: 'none',
           border: 'none',
+          pointerEvents: 'none',
         }}
       >
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 0,
-            overflow: 'hidden',
-            borderRadius: 'inherit',
-            background: '#e5e7eb',
-          }}
-        >
-          <iframe
-            src={YANDEX_MAP_EMBED_URL}
-            title="Яндекс Карта"
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            allowFullScreen
-            style={{
-              display: 'block',
-              border: '0',
-              width: '100%',
-              height: '100%',
-            }}
-          />
-        </div>
-
         <header
           className="topBar"
           style={{
             position: 'relative',
             zIndex: 2,
+            pointerEvents: 'auto',
           }}
         >
           <button
@@ -157,6 +158,7 @@ export default function App() {
             marginTop: '20px',
             position: 'relative',
             zIndex: 2,
+            pointerEvents: 'none',
           }}
         >
           <aside
@@ -171,6 +173,7 @@ export default function App() {
               padding: '14px',
               display: 'flex',
               flexDirection: 'column',
+              pointerEvents: 'auto',
             }}
           >
             <div
