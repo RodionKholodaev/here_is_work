@@ -14,7 +14,7 @@ async def register_route(
     data: RegisterRequest,
     session: AsyncSession = Depends(get_session),
 ):
-    user = await register(session, data.name, data.password, data.role)
+    user = await register(session, data.name, data.password, data.role, data.adress)
 
     return AuthResponse(
         token="login_required",

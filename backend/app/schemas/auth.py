@@ -5,6 +5,7 @@ class RegisterRequest(BaseModel):
     name: str
     password: str
     role: str  # client / worker
+    adress: str
 
 
 class LoginRequest(BaseModel):
