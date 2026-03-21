@@ -1,0 +1,97 @@
+.appShell {
+  min-height: 100vh;
+  padding: 8px;
+}
+
+.pageFrame {
+  min-height: calc(100vh - 16px);
+  border: 2px solid var(--frame-border);
+  background: var(--bg);
+  padding: 20px 18px;
+}
+
+.topBar {
+  display: grid;
+  grid-template-columns: 92px 1fr 92px;
+  align-items: center;
+  gap: 14px;
+}
+
+.logoButton,
+.accountButton {
+  height: 38px;
+  border: 2px solid var(--stroke);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.logoButton:hover,
+.accountButton:hover {
+  transform: translateY(-1px);
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-soft);
+}
+
+.logoButton:active,
+.accountButton:active {
+  transform: translateY(0);
+}
+
+.topNav {
+  height: 38px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 2px solid var(--stroke);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.navButton {
+  border: none;
+  border-right: 2px solid var(--stroke);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.navButton:last-child {
+  border-right: none;
+}
+
+.navButton:hover {
+  background: var(--surface-hover);
+}
+
+.navButtonActive {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+@media (max-width: 760px) {
+  .topBar {
+    grid-template-columns: 1fr;
+  }
+
+  .topNav {
+    order: 2;
+  }
+
+  .accountButton {
+    order: 3;
+  }
+}
