@@ -45,6 +45,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('how')
   const [selectedService, setSelectedService] = useState(sortedServiceItems[0].id)
   const [address, setAddress] = useState('')
+  const [hoveredService, setHoveredService] = useState(null)
 
   const selectedServiceData = useMemo(
     () =>
@@ -160,66 +161,89 @@ export default function App() {
             >
               {sortedServiceItems.map((service) => {
                 const isActive = selectedService === service.id
+                const isHovered = hoveredService === service.id
 
                 return (
-                  <button
+                  <div
                     key={service.id}
-                    type="button"
-                    onClick={() => setSelectedService(service.id)}
-                    aria-pressed={isActive}
                     style={{
+                      position: 'relative',
                       width: '100%',
                       height: '100%',
-                      border: `2px solid ${isActive ? 'var(--accent)' : 'var(--stroke)'}`,
-                      borderRadius: '18px',
-                      background: isActive ? 'var(--accent-soft)' : 'var(--surface)',
-                      color: 'var(--text-primary)',
-                      padding: '14px 12px',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      transition:
-                        'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
-                      boxShadow: isActive ? 'var(--shadow-soft)' : 'none',
                     }}
-                    onMouseEnter={(event) => {
-                      if (!isActive) {
-                        event.currentTarget.style.background = 'var(--surface-hover)'
-                        event.currentTarget.style.transform = 'translateY(-1px)'
-                      }
-                    }}
-                    onMouseLeave={(event) => {
-                      if (!isActive) {
-                        event.currentTarget.style.background = 'var(--surface)'
-                        event.currentTarget.style.transform = 'translateY(0)'
-                      }
-                    }}
+                    onMouseEnter={() => setHoveredService(service.id)}
+                    onMouseLeave={() => setHoveredService(null)}
                   >
-                    <span
+                    <button
+                      type="button"
+                      onClick={() => setSelectedService(service.id)}
+                      aria-pressed={isActive}
                       style={{
-                        display: 'block',
-                        fontSize: '15px',
-                        fontWeight: 700,
-                        lineHeight: 1.2,
-                        minHeight: '38px',
+                        width: '100%',
+                        height: '100%',
+                        border: `2px solid ${isActive ? 'var(--accent)' : 'var(--stroke)'}`,
+                        borderRadius: '18px',
+                        background: isActive ? 'var(--accent-soft)' : 'var(--surface)',
+                        color: 'var(--text-primary)',
+                        padding: '14px 12px',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        transition:
+                          'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
+                        boxShadow: isActive ? 'var(--shadow-soft)' : 'none',
                       }}
                     >
-                      {service.title}
-                    </span>
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          lineHeight: 1.2,
+                          minHeight: '38px',
+                        }}
+                      >
+                        {service.title}
+                      </span>
 
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: isActive ? 'var(--accent)' : '#475569',
-                      }}
-                    >
-                      {service.price}
-                    </span>
-                  </button>
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: isActive ? 'var(--accent)' : '#475569',
+                        }}
+                      >
+                        {service.price}
+                      </span>
+                    </button>
+
+                    {isHovered && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: 'calc(100% + 10px)',
+                          transform: 'translateY(-50%)',
+                          width: '220px',
+                          padding: '12px 14px',
+                          border: '2px solid var(--stroke)',
+                          borderRadius: '16px',
+                          background: 'var(--surface)',
+                          boxShadow: 'var(--shadow-soft)',
+                          color: '#475569',
+                          fontSize: '13px',
+                          lineHeight: 1.35,
+                          zIndex: 20,
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        {service.descr}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>
