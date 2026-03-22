@@ -15,6 +15,8 @@ import LeftSidebar from './LeftSidebar'
 const YANDEX_MAP_EMBED_URL =
   'https://yandex.ru/map-widget/v1/?ll=37.588144%2C55.733842&z=10&lang=ru_RU'
 
+const YANDEX_GEOCODER_API_KEY = '0e2f26fb-0dd2-4844-b9b2-1ff5867cb501'
+
 const navItems = [
   { id: 'how', label: 'Как работает' },
   { id: 'pricing', label: 'Тарифы' },
@@ -127,6 +129,9 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('services')
   const [usePointsMode, setUsePointsMode] = useState(false)
   const [useBrushMode, setUseBrushMode] = useState(false)
+  const [mapUrl, setMapUrl] = useState(YANDEX_MAP_EMBED_URL)
+  const [latitude, setLatitude] = useState(null)
+  const [longitude, setLongitude] = useState(null)
 
   const selectedServiceData = useMemo(
     () =>
@@ -151,41 +156,82 @@ export default function App() {
     setSelectedServiceTag(selectedServiceData.tag)
     setCurrentPage('details')
 
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth',
+    })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+
     console.log('Переход на вторую страницу:', {
       address,
       serviceId: selectedServiceData.id,
       serviceTag: selectedServiceData.tag,
+      latitude,
+      longitude,
     })
   }
 
   const handleAddressSubmit = async () => {
-    window.scrollTo(0, 0)
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
+    const trimmedAddress = address.trim()
 
-    console.log('Ввод адреса:', address)
+    console.log('Ввод адреса:', trimmedAddress)
+
+    if (!trimmedAddress) {
+      console.error('Адрес пустой')
+      return
+    }
 
     try {
-      console.log('Отправляем запрос...')
+      console.log('Отправляем запрос в Yandex Geocoder...')
 
-      const response = await fetch(
-        'http://127.0.0.1:8000/order/get-coordinates',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            adress: address,
-          }),
-        },
-      )
+      const geocoderUrl =
+        `https://geocode-maps.yandex.ru/v1/?apikey=${encodeURIComponent(YANDEX_GEOCODER_API_KEY)}&geocode=${encodeURIComponent(trimmedAddress)}&format=json&lang=ru_RU&results=1`
+
+      const response = await fetch(geocoderUrl, {
+        method: 'GET',
+      })
 
       console.log('Ответ получен:', response)
+
+      if (!response.ok) {
+        throw new Error(`Ошибка Geocoder API: ${response.status}`)
+      }
 
       const data = await response.json()
 
       console.log('JSON получен:', data)
+
+      const pointPos =
+        data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject?.Point?.pos
+
+      if (!pointPos) {
+        console.error('Координаты не найдены в ответе:', data)
+        return
+      }
+
+      const [rawLongitude, rawLatitude] = pointPos.trim().split(/\s+/)
+      const nextLongitude = Number(rawLongitude)
+      const nextLatitude = Number(rawLatitude)
+
+      if (!Number.isFinite(nextLongitude) || !Number.isFinite(nextLatitude)) {
+        console.error('Некорректные координаты:', pointPos)
+        return
+      }
+
+      setLongitude(nextLongitude)
+      setLatitude(nextLatitude)
+
+      const nextMapUrl =
+        `https://yandex.ru/map-widget/v1/?ll=${nextLongitude}%2C${nextLatitude}&z=16&lang=ru_RU`
+
+      setMapUrl(nextMapUrl)
+
+      console.log('Карта перемещена на координаты:', {
+        latitude: nextLatitude,
+        longitude: nextLongitude,
+      })
     } catch (error) {
       console.error('Ошибка запроса:', error)
     }
@@ -210,7 +256,7 @@ export default function App() {
         }}
       >
         <iframe
-          src={YANDEX_MAP_EMBED_URL}
+          src={mapUrl}
           title="Яндекс Карта"
           width="100%"
           height="100%"
