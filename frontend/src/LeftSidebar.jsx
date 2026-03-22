@@ -22,6 +22,8 @@ export default function LeftSidebar({
   const [area, setArea] = useState('')
   const [comment, setComment] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
+  const [price, setPrice] = useState(0)
+
 
   // Синхронизация площади с карты
   useEffect(() => {
@@ -32,6 +34,34 @@ export default function LeftSidebar({
     }
   }, [savedArea])
 
+
+  //  ЭФФЕКТ ДЛЯ ЗАПРОСА ЦЕНЫ (С DEBOUNCE 500мс)
+  useEffect(() => {
+    const areaNum = parseFloat(area)
+    
+    // Если поле пустое или ноль, сбрасываем цену и не отправляем запрос
+    if (!areaNum || areaNum <= 0) {
+      setPrice(0)
+      return
+    }
+
+    // Делаем задержку в 500мс перед запросом (чтобы не спамить при вводе)
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/mock/orders/get-price?area=${areaNum}`)
+        if (response.ok) {
+          const data = await response.json()
+          console.log("Ответ от бэкенда:", data)
+          setPrice(data.price) // Кладём цену из бэкенда в состояние
+        }
+      } catch (error) {
+        console.error('Ошибка при получении цены:', error)
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn) // Очищаем таймер, если юзер продолжает печатать
+  }, [area])
+
   const handleSubmitOrder = async () => {
   onOrderSubmit({
     date,
@@ -40,6 +70,7 @@ export default function LeftSidebar({
     area,
     comment,
     isUrgent,
+    price,
     })
     }
 
@@ -392,6 +423,22 @@ export default function LeftSidebar({
               />
             </div>
           </div>
+
+        {price > 0 && (
+          <div style={{
+            marginTop: '12px',
+            padding: '12px',
+            borderRadius: '14px',
+            background: 'var(--accent-soft)',
+            color: 'var(--accent)',
+            textAlign: 'center',
+            fontWeight: 800,
+            fontSize: '16px',
+            border: '2px solid var(--stroke)',
+          }}>
+            Предварительная стоимость: {price} ₽
+          </div>
+        )}
 
           {/* Кнопка Заказать (Всегда снизу) */}
           <div style={{ paddingTop: '16px' }}>

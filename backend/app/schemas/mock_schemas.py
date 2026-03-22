@@ -4,6 +4,12 @@ from typing import Optional
 
 # ТЕСТОВЫЕ СХЕМЫ
 
+class area_scheme(BaseModel):
+    area: float
+    
+class price_schene(BaseModel):
+    price: float
+    
 class MockOrderCreate(BaseModel):
 
     date: datetime

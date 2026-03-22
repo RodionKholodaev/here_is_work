@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from datetime import datetime, timedelta
-from app.schemas.mock_schemas import MockOrderCreate, MockOrderCreatedResponse, MockOrderResultResponse, MockWorker
+from app.schemas.mock_schemas import MockOrderCreate, MockOrderCreatedResponse, MockOrderResultResponse, price_schene, area_scheme
 import random
 
 router = APIRouter(
@@ -66,3 +66,9 @@ async def get_mock_result(
         "time_end": time_end,
         "worker": worker
     }
+
+@router.get("/orders/get-price", response_model=price_schene)
+async def get_mock_price(area: float): 
+    generated_price = float(random.randint(500, 1000)) + area*10
+    print(generated_price)
+    return {"price": generated_price} 
