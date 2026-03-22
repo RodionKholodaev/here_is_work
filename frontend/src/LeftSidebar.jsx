@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function LeftSidebar({
   address,
@@ -11,7 +11,8 @@ export default function LeftSidebar({
   hoveredService,
   setHoveredService,
   handleContinueClick,
-  currentPage, // <-- Не забудь передать этот пропс из App.jsx!
+  currentPage,
+  savedArea,
 }) {
   // --- СОСТОЯНИЯ ДЛЯ НОВОЙ ФОРМЫ ОФОРМЛЕНИЯ ---
   const [startTime, setStartTime] = useState('')
@@ -22,6 +23,13 @@ export default function LeftSidebar({
   const [comment, setComment] = useState('')
   const [date, setDate] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
+
+  useEffect(() => {
+    if (savedArea) {
+      // Округляем до целых чисел для красоты
+      setArea(Math.round(savedArea).toString())
+    }
+  }, [savedArea])
 
   // --- ШАБЛОН ФУНКЦИИ ОТПРАВКИ НА БЭКЕНД ---
   const handleSubmitOrder = async () => {

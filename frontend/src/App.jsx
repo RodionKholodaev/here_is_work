@@ -817,6 +817,7 @@ export default function App() {
             setHoveredService={setHoveredService}
             handleContinueClick={handleContinueClick}
             currentPage={currentPage}
+            savedArea={savedAreaSquareMeters}
           />
         </main>
       </div>
