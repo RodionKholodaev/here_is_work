@@ -10,6 +10,7 @@ import snowHandImage from './assets_for_app/SNOWHAND.png'
 import mechSummerImage from './assets_for_app/MECHSUMMER.png'
 import coatingsImage from './assets_for_app/COATINGS.png'
 import garbCollectorImage from './assets_for_app/GARBCOLLECTOR.png'
+import LeftSidebar from './LeftSidebar'
 
 const YANDEX_MAP_EMBED_URL =
   'https://yandex.ru/map-widget/v1/?ll=37.588144%2C55.733842&z=10&lang=ru_RU'
@@ -21,47 +22,98 @@ const navItems = [
 ]
 
 const serviceItems = [
-  { id: 'anti-ice', title: 'Антигололедная обработка', price: 'от 8 ₽/м²', sortValue: 8,
-    descr:'Рассыпка песка, соли или реагентов против наледи.' },
-
-  { id: 'lawn-care', title: 'Покос травы', price: 'от 10 ₽/м²', sortValue: 10,
-    descr:'Покос травы, сбор скошенной растительности.'},
-
-  { id: 'leaf-collection', title: 'Сбор листвы', price: 'от 12 ₽/м²', sortValue: 12,
-    descr:'Сгребание, упаковка в мешки и вывоз листвы.' },
-
-  { id: 'manual-cleaning', title: 'Ручная уборка', price: 'от 15 ₽/м²', sortValue: 15,
-    descr: 'Подметание дорожек и тротуаров, сбор мелкого мусора.'},
-
-  { id: 'mechanized-summer', title: 'Механизированная уборка', price: 'от 18 ₽/м²', sortValue: 18,
-    descr:'Очистка территории трактором со щеткой или отвалом, сдвигание снега в валы.' },
-
-  { id: 'snow-cleaning', title: 'Уборка снега', price: 'от 20 ₽/м²', sortValue: 20,
-    descr: 'Очистка покрытий от свежего и слежавшегося снега.' },
-
-  { id: 'mechanized-winter', title: 'Мехуборка летняя', price: 'от 24 ₽/м²', sortValue: 24,
-    descr:'Подметальные машины, мойки высокого давления.' },
-
-  { id: 'pressure-wash', title: 'Мойка покрытий', price: 'от 30 ₽/м²', sortValue: 30,
-    descr:'Очистка урн, скамеек, детских и спортивных площадок.'},
-
-  { id: 'garbage-haul', title: 'Погрузка и вывоз мусора', price: 'от 1 500 ₽/рейс', sortValue: 1500,
-    descr:'Сбор, погрузка и вывоз веток, мешков, КГМ'},
-
-  { id: 'container-site', title: 'Содержание КП', price: 'от 1 500 ₽/площадка', sortValue: 1501,
-    descr:'Очистка территории вокруг баков, мытье контейнеров' },
+  {
+    id: 'anti-ice',
+    title: 'Антигололедная обработка',
+    price: 'от 8 ₽/м²',
+    sortValue: 8,
+    tag: 'ICEKILL',
+    descr: 'Рассыпка песка, соли или реагентов против наледи.',
+  },
+  {
+    id: 'lawn-care',
+    title: 'Покос травы',
+    price: 'от 10 ₽/м²',
+    sortValue: 10,
+    tag: 'GRASS',
+    descr: 'Покос травы, сбор скошенной растительности.',
+  },
+  {
+    id: 'leaf-collection',
+    title: 'Сбор листвы',
+    price: 'от 12 ₽/м²',
+    sortValue: 12,
+    tag: 'LEAVES',
+    descr: 'Сгребание, упаковка в мешки и вывоз листвы.',
+  },
+  {
+    id: 'manual-cleaning',
+    title: 'Ручная уборка',
+    price: 'от 15 ₽/м²',
+    sortValue: 15,
+    tag: 'HAND',
+    descr: 'Подметание дорожек и тротуаров, сбор мелкого мусора.',
+  },
+  {
+    id: 'mechanized-summer',
+    title: 'Механизированная уборка',
+    price: 'от 18 ₽/м²',
+    sortValue: 18,
+    tag: 'MECH',
+    descr: 'Очистка территории трактором со щеткой или отвалом, сдвигание снега в валы.',
+  },
+  {
+    id: 'snow-cleaning',
+    title: 'Уборка снега',
+    price: 'от 20 ₽/м²',
+    sortValue: 20,
+    tag: 'SNOWHAND',
+    descr: 'Очистка покрытий от свежего и слежавшегося снега.',
+  },
+  {
+    id: 'mechanized-winter',
+    title: 'Мехуборка летняя',
+    price: 'от 24 ₽/м²',
+    sortValue: 24,
+    tag: 'MECHSUMMER',
+    descr: 'Подметальные машины, мойки высокого давления.',
+  },
+  {
+    id: 'pressure-wash',
+    title: 'Мойка покрытий',
+    price: 'от 30 ₽/м²',
+    sortValue: 30,
+    tag: 'COATINGS',
+    descr: 'Очистка урн, скамеек, детских и спортивных площадок.',
+  },
+  {
+    id: 'garbage-haul',
+    title: 'Погрузка и вывоз мусора',
+    price: 'от 1 500 ₽/рейс',
+    sortValue: 1500,
+    tag: 'GARBCOLLECTOR',
+    descr: 'Сбор, погрузка и вывоз веток, мешков, КГМ',
+  },
+  {
+    id: 'container-site',
+    title: 'Содержание КП',
+    price: 'от 1 500 ₽/площадка',
+    sortValue: 1501,
+    tag: 'CONTAINER_SITE',
+    descr: 'Очистка территории вокруг баков, мытье контейнеров',
+  },
 ]
 
 const serviceIcons = {
-  'anti-ice': iceKillImage,
-  'lawn-care': grassImage,
-  'leaf-collection': leavesImage,
-  'manual-cleaning': handImage,
-  'mechanized-summer': mechImage,
-  'snow-cleaning': snowHandImage,
-  'mechanized-winter': mechSummerImage,
-  'pressure-wash': coatingsImage,
-  'garbage-haul': garbCollectorImage,
+  ICEKILL: iceKillImage,
+  GRASS: grassImage,
+  LEAVES: leavesImage,
+  HAND: handImage,
+  MECH: mechImage,
+  SNOWHAND: snowHandImage,
+  MECHSUMMER: mechSummerImage,
+  COATINGS: coatingsImage,
+  GARBCOLLECTOR: garbCollectorImage,
 }
 
 const sortedServiceItems = [...serviceItems].sort((a, b) => a.sortValue - b.sortValue)
@@ -69,8 +121,12 @@ const sortedServiceItems = [...serviceItems].sort((a, b) => a.sortValue - b.sort
 export default function App() {
   const [activeTab, setActiveTab] = useState('how')
   const [selectedService, setSelectedService] = useState(sortedServiceItems[0].id)
+  const [selectedServiceTag, setSelectedServiceTag] = useState(sortedServiceItems[0].tag)
   const [address, setAddress] = useState('')
   const [hoveredService, setHoveredService] = useState(null)
+  const [currentPage, setCurrentPage] = useState('services')
+  const [usePointsMode, setUsePointsMode] = useState(false)
+  const [useBrushMode, setUseBrushMode] = useState(false)
 
   const selectedServiceData = useMemo(
     () =>
@@ -84,14 +140,33 @@ export default function App() {
   }
 
   const handleContinueClick = () => {
-    console.log(`Продолжить: ${selectedServiceData.title}`, address)
+    const hasAddress = address.trim().length > 0
+    const hasService = Boolean(selectedServiceData)
+
+    if (!hasAddress || !hasService) {
+      console.log('Для перехода нужно ввести адрес и выбрать услугу')
+      return
+    }
+
+    setSelectedServiceTag(selectedServiceData.tag)
+    setCurrentPage('details')
+
+    console.log('Переход на вторую страницу:', {
+      address,
+      serviceId: selectedServiceData.id,
+      serviceTag: selectedServiceData.tag,
+    })
   }
 
   const handleAddressSubmit = async () => {
-    console.log('Ввод адреса:', address);
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+
+    console.log('Ввод адреса:', address)
 
     try {
-      console.log('Отправляем запрос...');
+      console.log('Отправляем запрос...')
 
       const response = await fetch(
         'http://127.0.0.1:8000/order/get-coordinates',
@@ -101,21 +176,20 @@ export default function App() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            adress: address
+            adress: address,
           }),
-        }
-      );
+        },
+      )
 
-      console.log('Ответ получен:', response);
+      console.log('Ответ получен:', response)
 
-      const data = await response.json();
+      const data = await response.json()
 
-      console.log('JSON получен:', data);
-
+      console.log('JSON получен:', data)
     } catch (error) {
-      console.error('Ошибка запроса:', error);
+      console.error('Ошибка запроса:', error)
     }
-  };
+  }
 
   return (
     <div
@@ -179,7 +253,7 @@ export default function App() {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'default',
-              opacity: 1.5
+              opacity: 1.5,
             }}
           >
             <img
@@ -216,6 +290,172 @@ export default function App() {
           </button>
         </header>
 
+        {currentPage === 'details' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '84px',
+              right: '18px',
+              zIndex: 2,
+              width: '270px',
+              border: '2px solid var(--stroke)',
+              borderRadius: '24px',
+              background: 'var(--surface)',
+              boxShadow: 'var(--shadow-soft)',
+              overflow: 'hidden',
+              pointerEvents: 'auto',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
+          >
+            <div
+              style={{
+                padding: '18px 18px 16px',
+                borderBottom: '1px solid var(--stroke)',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '19px',
+                  fontWeight: 700,
+                  lineHeight: 1.25,
+                  color: 'var(--text-primary)',
+                  textAlign: 'center',
+                }}
+              >
+                Закрасьте предполагаемую область уборки
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              }}
+            >
+              <label
+                style={{
+                  minHeight: '58px',
+                  borderRight: '1px solid var(--stroke)',
+                  borderBottom: '1px solid var(--stroke)',
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  padding: '12px 10px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={usePointsMode}
+                  onChange={(event) => setUsePointsMode(event.target.checked)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    margin: 0,
+                    accentColor: 'var(--accent)',
+                    cursor: 'pointer',
+                  }}
+                />
+                <span>Точки</span>
+              </label>
+
+              <label
+                style={{
+                  minHeight: '58px',
+                  borderBottom: '1px solid var(--stroke)',
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  padding: '12px 10px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={useBrushMode}
+                  onChange={(event) => setUseBrushMode(event.target.checked)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    margin: 0,
+                    accentColor: 'var(--accent)',
+                    cursor: 'pointer',
+                  }}
+                />
+                <span>Кисть</span>
+              </label>
+
+              <button
+                type="button"
+                style={{
+                  minHeight: '58px',
+                  border: 'none',
+                  borderRight: '1px solid var(--stroke)',
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '12px 10px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  transition: 'background-color 0.15s ease, transform 0.15s ease',
+                }}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.transform = 'translateY(-1px)'
+                  event.currentTarget.style.background = '#bfdbfe'
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.transform = 'translateY(0)'
+                  event.currentTarget.style.background = 'var(--accent-soft)'
+                }}
+              >
+                Сбросить
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  minHeight: '58px',
+                  border: 'none',
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '12px 10px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  transition: 'background-color 0.15s ease, transform 0.15s ease',
+                }}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.transform = 'translateY(-1px)'
+                  event.currentTarget.style.background = '#bfdbfe'
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.transform = 'translateY(0)'
+                  event.currentTarget.style.background = 'var(--accent-soft)'
+                }}
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        )}
+
         <main
           style={{
             marginTop: '20px',
@@ -224,237 +464,18 @@ export default function App() {
             pointerEvents: 'none',
           }}
         >
-          <aside
-            style={{
-              flex: '0 0 372px',
-              width: '372px',
-              minHeight: '690px',
-              border: '2px solid var(--stroke)',
-              borderRadius: '28px',
-              background: 'var(--surface)',
-              boxShadow: 'var(--shadow-soft)',
-              padding: '14px',
-              display: 'flex',
-              flexDirection: 'column',
-              pointerEvents: 'auto',
-            }}
-          >
-            <div
-              style={{
-                marginBottom: '12px',
-                border: '2px solid var(--stroke)',
-                borderRadius: '18px',
-                background: 'var(--surface)',
-                boxShadow: 'var(--shadow-soft)',
-                padding: '6px 6px 6px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <input
-                type="text"
-                value={address}
-                onChange={(event) => setAddress(event.target.value)}
-                placeholder="введите ваш адрес"
-                style={{
-                  width: '100%',
-                  border: 'none',
-                  outline: 'none',
-                  background: 'transparent',
-                  color: 'var(--text-primary)',
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  lineHeight: 1.2,
-                  minWidth: 0,
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleAddressSubmit}
-                style={{
-                  flex: '0 0 auto',
-                  minWidth: '72px',
-                  height: '36px',
-                  border: '2px solid var(--stroke)',
-                  borderRadius: '12px',
-                  background: 'var(--accent-soft)',
-                  color: 'var(--accent)',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  padding: '0 14px',
-                  transition:
-                    'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease',
-                  boxShadow: 'var(--shadow-soft)',
-                }}
-                onMouseEnter={(event) => {
-                  event.currentTarget.style.transform = 'translateY(-1px)'
-                  event.currentTarget.style.background = '#bfdbfe'
-                }}
-                onMouseLeave={(event) => {
-                  event.currentTarget.style.transform = 'translateY(0)'
-                  event.currentTarget.style.background = 'var(--accent-soft)'
-                }}
-              >
-                Ввод
-              </button>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                gridAutoRows: '118px',
-                gap: '12px',
-              }}
-            >
-              {sortedServiceItems.map((service) => {
-                const isActive = selectedService === service.id
-                const isHovered = hoveredService === service.id
-                const serviceIcon = serviceIcons[service.id]
-
-                return (
-                  <div
-                    key={service.id}
-                    style={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '100%',
-                    }}
-                    onMouseEnter={() => setHoveredService(service.id)}
-                    onMouseLeave={() => setHoveredService(null)}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setSelectedService(service.id)}
-                      aria-pressed={isActive}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        border: `2px solid ${isActive ? 'var(--accent)' : 'var(--stroke)'}`,
-                        borderRadius: '18px',
-                        background: isActive ? 'var(--accent-soft)' : 'var(--surface)',
-                        color: 'var(--text-primary)',
-                        padding: '14px 12px',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        transition:
-                          'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
-                        boxShadow: isActive ? 'var(--shadow-soft)' : 'none',
-                        position: 'relative',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {serviceIcon && (
-                        <img
-                          src={serviceIcon}
-                          alt=""
-                          aria-hidden="true"
-                          style={{
-                            position: 'absolute',
-                            top: '-20px',
-                            left: '5px',
-                            width: '150px',
-                            height: '150px',
-                            objectFit: 'contain',
-                            opacity: 0.32,
-                            zIndex: 0,
-                            pointerEvents: 'none',
-                          }}
-                        />
-                      )}
-
-                      <span
-                        style={{
-                          display: 'block',
-                          fontSize: '15px',
-                          fontWeight: 700,
-                          lineHeight: 1.2,
-                          minHeight: '38px',
-                          position: 'relative',
-                          zIndex: 1,
-                        }}
-                      >
-                        {service.title}
-                      </span>
-
-                      <span
-                        style={{
-                          display: 'block',
-                          fontSize: '14px',
-                          fontWeight: 700,
-                          color: isActive ? 'var(--accent)' : '#475569',
-                          position: 'relative',
-                          zIndex: 1,
-                        }}
-                      >
-                        {service.price}
-                      </span>
-                    </button>
-
-                    {isHovered && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '50%',
-                          left: 'calc(100% + 10px)',
-                          transform: 'translateY(-50%)',
-                          width: '220px',
-                          padding: '12px 14px',
-                          border: '2px solid var(--stroke)',
-                          borderRadius: '16px',
-                          background: 'var(--surface)',
-                          boxShadow: 'var(--shadow-soft)',
-                          color: '#475569',
-                          fontSize: '13px',
-                          lineHeight: 1.35,
-                          zIndex: 20,
-                          pointerEvents: 'none',
-                        }}
-                      >
-                        {service.descr}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-              <button
-                type="button"
-                onClick={handleContinueClick}
-                style={{
-                  width: '100%',
-                  minHeight: '56px',
-                  border: '2px solid var(--stroke)',
-                  borderRadius: '18px',
-                  background: 'var(--accent-soft)',
-                  color: 'var(--accent)',
-                  fontSize: '16px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  transition:
-                    'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease',
-                  boxShadow: 'var(--shadow-soft)',
-                }}
-                onMouseEnter={(event) => {
-                  event.currentTarget.style.transform = 'translateY(-1px)'
-                  event.currentTarget.style.background = '#bfdbfe'
-                }}
-                onMouseLeave={(event) => {
-                  event.currentTarget.style.transform = 'translateY(0)'
-                  event.currentTarget.style.background = 'var(--accent-soft)'
-                }}
-              >
-                Продолжить
-              </button>
-            </div>
-          </aside>
+          <LeftSidebar
+            address={address}
+            setAddress={setAddress}
+            handleAddressSubmit={handleAddressSubmit}
+            sortedServiceItems={sortedServiceItems}
+            serviceIcons={serviceIcons}
+            selectedService={selectedService}
+            setSelectedService={setSelectedService}
+            hoveredService={hoveredService}
+            setHoveredService={setHoveredService}
+            handleContinueClick={handleContinueClick}
+          />
         </main>
       </div>
     </div>
