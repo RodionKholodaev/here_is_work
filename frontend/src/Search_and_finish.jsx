@@ -68,70 +68,6 @@ export default function Search_and_finish({
         pointerEvents: 'auto',
       }}
     >
-      <style>
-        {`
-          @keyframes finishPanelAppear {
-            0% {
-              opacity: 0;
-              transform: translateY(10px) scale(0.985);
-            }
-            100% {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
-
-          @keyframes rippleWave {
-            0% {
-              transform: translate(-50%, -50%) scale(0.55);
-              opacity: 0;
-            }
-            18% {
-              opacity: 0.38;
-            }
-            100% {
-              transform: translate(-50%, -50%) scale(1.75);
-              opacity: 0;
-            }
-          }
-
-          @keyframes pulseArea {
-            0% {
-              transform: scale(1);
-              box-shadow:
-                0 0 0 0 rgba(47, 111, 228, 0.18),
-                inset 0 1px 0 rgba(255,255,255,0.35);
-            }
-            50% {
-              transform: scale(1.035);
-              box-shadow:
-                0 0 0 10px rgba(47, 111, 228, 0.06),
-                inset 0 1px 0 rgba(255,255,255,0.35);
-            }
-            100% {
-              transform: scale(1);
-              box-shadow:
-                0 0 0 0 rgba(47, 111, 228, 0),
-                inset 0 1px 0 rgba(255,255,255,0.35);
-            }
-          }
-
-          @keyframes shimmerLine {
-            0% {
-              transform: translateX(-120%);
-              opacity: 0;
-            }
-            35% {
-              opacity: 0.55;
-            }
-            100% {
-              transform: translateX(120%);
-              opacity: 0;
-            }
-          }
-        `}
-      </style>
-
       <div
         style={{
           border: '2px solid var(--stroke)',
@@ -141,127 +77,8 @@ export default function Search_and_finish({
           padding: '16px 16px 14px',
           marginBottom: '14px',
           overflow: 'hidden',
-          animation: 'finishPanelAppear 0.45s ease',
         }}
       >
-        <div
-          style={{
-            position: 'relative',
-            height: '164px',
-            borderRadius: '18px',
-            marginBottom: '14px',
-            background:
-              'linear-gradient(180deg, rgba(247,250,255,0.88) 0%, rgba(236,243,255,0.74) 100%)',
-            border: '1px solid rgba(47, 111, 228, 0.12)',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: '0',
-              background:
-                'radial-gradient(circle at 50% 50%, rgba(47,111,228,0.07) 0%, rgba(47,111,228,0.03) 30%, rgba(255,255,255,0) 68%)',
-            }}
-          />
-
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '94px',
-                height: '94px',
-                borderRadius: '999px',
-                border: '2px solid rgba(47, 111, 228, 0.18)',
-                animation: 'rippleWave 2.8s ease-out infinite',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '94px',
-                height: '94px',
-                borderRadius: '999px',
-                border: '2px solid rgba(47, 111, 228, 0.16)',
-                animation: 'rippleWave 2.8s ease-out 0.7s infinite',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '94px',
-                height: '94px',
-                borderRadius: '999px',
-                border: '2px solid rgba(47, 111, 228, 0.14)',
-                animation: 'rippleWave 2.8s ease-out 1.4s infinite',
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              width: '92px',
-              height: '92px',
-              transform: 'translate(-50%, -50%) rotate(-7deg)',
-              borderRadius: '22px',
-              background:
-                'linear-gradient(180deg, rgba(47,111,228,0.26) 0%, rgba(47,111,228,0.18) 100%)',
-              border: '2px solid rgba(47, 111, 228, 0.38)',
-              animation: 'pulseArea 2.6s ease-in-out infinite',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background:
-                  'linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.18) 100%)',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                width: '70%',
-                background:
-                  'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.42) 50%, rgba(255,255,255,0) 100%)',
-                animation: 'shimmerLine 2.8s ease-in-out infinite',
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              position: 'absolute',
-              left: '18px',
-              right: '18px',
-              bottom: '14px',
-              textAlign: 'center',
-              fontSize: '13px',
-              fontWeight: 700,
-              color: 'rgba(47, 111, 228, 0.92)',
-            }}
-          >
-            Исполнители получают заказ и видят область работ
-          </div>
-        </div>
 
         <div
           style={{
@@ -307,7 +124,7 @@ export default function Search_and_finish({
           flex: 1,
         }}
       >
-        {orderInfoRows.map((row, index) => (
+        {orderInfoRows.map((row) => (
           <div
             key={row.label}
             style={{
@@ -316,7 +133,6 @@ export default function Search_and_finish({
               background: 'var(--surface)',
               boxShadow: 'var(--shadow-soft)',
               padding: '12px 14px',
-              animation: `finishPanelAppear 0.35s ease ${0.04 * index}s both`,
             }}
           >
             <div
