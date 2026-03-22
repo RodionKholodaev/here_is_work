@@ -816,6 +816,7 @@ export default function App() {
             hoveredService={hoveredService}
             setHoveredService={setHoveredService}
             handleContinueClick={handleContinueClick}
+            currentPage={currentPage}
           />
         </main>
       </div>
