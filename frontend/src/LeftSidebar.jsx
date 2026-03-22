@@ -15,59 +15,25 @@ export default function LeftSidebar({
   savedArea,
 }) {
   // --- СОСТОЯНИЯ ДЛЯ НОВОЙ ФОРМЫ ОФОРМЛЕНИЯ ---
+  const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [area, setArea] = useState('')
-  const [price, setPrice] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('sbp') // По умолчанию СБП
   const [comment, setComment] = useState('')
-  const [date, setDate] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
 
+  // Синхронизация площади с карты
   useEffect(() => {
-    if (savedArea) {
-      // Округляем до целых чисел для красоты
+    if (typeof savedArea === 'number') {
       setArea(Math.round(savedArea).toString())
+    } else if (!savedArea) {
+      setArea('')
     }
   }, [savedArea])
 
-  // --- ШАБЛОН ФУНКЦИИ ОТПРАВКИ НА БЭКЕНД ---
+  // Шаблон (пока пустой, займемся позже)
   const handleSubmitOrder = async () => {
-    const orderData = {
-      address,
-      start_time: startTime,
-      end_time: endTime,
-      area: Number(area),
-      price: Number(price),
-      payment_method: paymentMethod,
-      comment: comment,
-      date: date,
-      is_urgent: isUrgent,
-      service_id: selectedService,
-    }
-
-    console.log('Отправка заказа на бэкенд:', orderData)
-
-    try {
-      // Меняй URL на свой эндпоинт для создания заказа
-      const response = await fetch('http://127.0.0.1:8000/order/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        console.log('Заказ успешно создан!', result)
-        alert('Заказ успешно оформлен!')
-      } else {
-        console.error('Ошибка сервера при создании заказа:', response.statusText)
-      }
-    } catch (error) {
-      console.error('Ошибка сети при отправке заказа:', error)
-    }
+    console.log('Заказ готов к отправке!')
   }
 
   return (
@@ -75,7 +41,7 @@ export default function LeftSidebar({
       style={{
         flex: '0 0 372px',
         width: '372px',
-        minHeight: '690px',
+        minHeight: currentPage === 'services' ? '690px' : 'auto',
         border: '2px solid var(--stroke)',
         borderRadius: '28px',
         background: 'var(--surface)',
@@ -310,7 +276,7 @@ export default function LeftSidebar({
       )}
 
       {/* ==========================================================
-          ЭКРАН 2: DETAILS (ФОРМА ОФОРМЛЕНИЯ ЗАКАЗА ИЗ РИСУНКА)
+          ЭКРАН 2: DETAILS (НОВАЯ ФОРМА ОФОРМЛЕНИЯ ЗАКАЗА)
           ========================================================== */}
       {currentPage === 'details' && (
         <>
@@ -331,31 +297,62 @@ export default function LeftSidebar({
             {address || 'Адрес не указан'}
           </div>
 
-          {/* Контейнер полей с прокруткой, если форма будет длинной */}
+          {/* Контейнер полей */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
-              flex: 1,
               overflowY: 'auto',
               paddingRight: '4px',
             }}
           >
-            {/* Время начала */}
+            {/* Дата */}
             <div style={inputGroupStyle}>
-              <label style={labelStyle}>Время начала:</label>
+              <label style={labelStyle}>Дата:</label>
               <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 style={inputStyle}
               />
             </div>
 
-            {/* Время окончания */}
+            {/* Начать работу с + Кнопка Срочно */}
             <div style={inputGroupStyle}>
-              <label style={labelStyle}>Время конца:</label>
+              <label style={labelStyle}>Начать работу с:</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsUrgent(!isUrgent)}
+                  style={{
+                    height: '40px',
+                    padding: '0 12px',
+                    border: '2px solid var(--stroke)',
+                    borderRadius: '12px',
+                    background: isUrgent ? 'var(--accent)' : 'var(--surface)',
+                    color: isUrgent ? '#fff' : 'var(--text-primary)',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {isUrgent ? 'Как можно скорее 🔥' : 'Как можно скорее'}
+                </button>
+              </div>
+            </div>
+
+            {/* Закончить работу до */}
+            <div style={inputGroupStyle}>
+              <label style={labelStyle}>Закончить работу до:</label>
               <input
                 type="time"
                 value={endTime}
@@ -376,80 +373,21 @@ export default function LeftSidebar({
               />
             </div>
 
-            {/* Цена */}
-            <div style={inputGroupStyle}>
-              <label style={labelStyle}>Цена (₽):</label>
-              <input
-                type="number"
-                placeholder="0"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Способ оплаты */}
-            <div style={inputGroupStyle}>
-              <label style={labelStyle}>Способ оплаты:</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                style={inputStyle}
-              >
-                <option value="sbp">СБП</option>
-                <option value="card">Банковская карта</option>
-                <option value="cash">Наличные</option>
-              </select>
-            </div>
-
             {/* Комментарий */}
             <div style={inputGroupStyle}>
               <label style={labelStyle}>Комментарий:</label>
               <textarea
-                rows="2"
+                rows="3"
                 placeholder="Дополнительные детали..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                style={{ ...inputStyle, resize: 'none', height: '60px' }}
+                style={{ ...inputStyle, resize: 'none', height: '80px', padding: '10px 12px' }}
               />
-            </div>
-
-            {/* Дата и Срочность (Две колонки в ряд, как на рисунке) */}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <div style={{ flex: 1, ...inputGroupStyle }}>
-                <label style={labelStyle}>Дата:</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <span style={labelStyle}>Срочность:</span>
-                <button
-                  type="button"
-                  onClick={() => setIsUrgent(!isUrgent)}
-                  style={{
-                    ...inputStyle,
-                    height: '100%',
-                    background: isUrgent ? 'var(--accent)' : 'var(--surface)',
-                    color: isUrgent ? '#fff' : 'var(--text-primary)',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '12px',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {isUrgent ? 'Как можно скорее 🔥' : 'Как можно скорее'}
-                </button>
-              </div>
             </div>
           </div>
 
-          {/* Кнопка Заказать (всегда снизу) */}
-          <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+          {/* Кнопка Заказать (Всегда снизу) */}
+          <div style={{ paddingTop: '16px' }}>
             <button
               type="button"
               onClick={handleSubmitOrder}
@@ -485,8 +423,7 @@ export default function LeftSidebar({
   )
 }
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ПОВТОРЯЮЩИЕСЯ СТИЛИ ДЛЯ ИНПУТОВ ---
-
+// Повторяющиеся стили
 const inputGroupStyle = {
   display: 'flex',
   flexDirection: 'column',
