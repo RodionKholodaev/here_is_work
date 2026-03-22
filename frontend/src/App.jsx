@@ -220,6 +220,8 @@ export default function App() {
   const mapRef = useRef(null)
   const pointMarkersRef = useRef([])
   const polygonRef = useRef(null)
+  const rippleCirclesRef = useRef([])
+  const rippleIntervalRef = useRef(null)
   const currentPageRef = useRef(currentPage)
   const usePointsModeRef = useRef(usePointsMode)
   const polygonPointsRef = useRef(polygonPoints)
@@ -311,6 +313,11 @@ export default function App() {
     return () => {
       isMounted = false
 
+      if (rippleIntervalRef.current) {
+        window.clearInterval(rippleIntervalRef.current)
+        rippleIntervalRef.current = null
+      }
+
       if (mapRef.current) {
         mapRef.current.destroy()
         mapRef.current = null
@@ -393,6 +400,87 @@ export default function App() {
       mapInstance.geoObjects.add(polygon)
     }
   }, [polygonPoints, previewAreaSquareMeters])
+
+  useEffect(() => {
+    if (!mapRef.current || !window.ymaps) {
+      return
+    }
+
+    const ymaps = window.ymaps
+    const mapInstance = mapRef.current
+
+    rippleCirclesRef.current.forEach((circle) => {
+      mapInstance.geoObjects.remove(circle)
+    })
+    rippleCirclesRef.current = []
+
+    if (rippleIntervalRef.current) {
+      window.clearInterval(rippleIntervalRef.current)
+      rippleIntervalRef.current = null
+    }
+
+    if (currentPage !== 'finish' || polygonPoints.length !== 4) {
+      return
+    }
+
+    const centerLat =
+      polygonPoints.reduce((sum, point) => sum + point.lat, 0) / polygonPoints.length
+    const centerLng =
+      polygonPoints.reduce((sum, point) => sum + point.lng, 0) / polygonPoints.length
+
+    const rippleConfigs = [
+      { maxRadius: 220, delay: 0 },
+      { maxRadius: 330, delay: 0.28 },
+      { maxRadius: 460, delay: 0.56 },
+    ]
+
+    rippleCirclesRef.current = rippleConfigs.map(() => {
+      const circle = new ymaps.Circle(
+        [[centerLat, centerLng], 35],
+        {},
+        {
+          fillColor: '#4fa3ff',
+          fillOpacity: 0,
+          strokeColor: '#4fa3ff',
+          strokeOpacity: 0,
+          strokeWidth: 4,
+          interactivityModel: 'default#transparent',
+        },
+      )
+
+      mapInstance.geoObjects.add(circle)
+      return circle
+    })
+
+    const animationStart = Date.now()
+
+    rippleIntervalRef.current = window.setInterval(() => {
+      const elapsedSeconds = (Date.now() - animationStart) / 1000
+
+      rippleCirclesRef.current.forEach((circle, index) => {
+        const config = rippleConfigs[index]
+        const progress = (elapsedSeconds / 3.1 + config.delay) % 1
+        const radius = 35 + progress * config.maxRadius
+        const opacity = Math.max(0, 0.56 * (1 - progress))
+
+        circle.geometry.setRadius(radius)
+        circle.options.set('fillOpacity', opacity * 0.2)
+        circle.options.set('strokeOpacity', opacity)
+      })
+    }, 50)
+
+    return () => {
+      rippleCirclesRef.current.forEach((circle) => {
+        mapInstance.geoObjects.remove(circle)
+      })
+      rippleCirclesRef.current = []
+
+      if (rippleIntervalRef.current) {
+        window.clearInterval(rippleIntervalRef.current)
+        rippleIntervalRef.current = null
+      }
+    }
+  }, [currentPage, polygonPoints])
 
   const handleAccountClick = () => {
     console.log('Клик по аккаунту')
