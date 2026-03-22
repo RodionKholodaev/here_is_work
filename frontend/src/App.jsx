@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import logoImage from './assets_for_app/LOGO.png'
 import grassImage from './assets_for_app/GRASS.png'
@@ -128,10 +128,26 @@ export default function App() {
   const [hoveredService, setHoveredService] = useState(null)
   const [currentPage, setCurrentPage] = useState('services')
   const [usePointsMode, setUsePointsMode] = useState(false)
-  const [useBrushMode, setUseBrushMode] = useState(false)
   const [mapUrl, setMapUrl] = useState(YANDEX_MAP_EMBED_URL)
   const [latitude, setLatitude] = useState(null)
   const [longitude, setLongitude] = useState(null)
+  const [polygonPoints, setPolygonPoints] = useState([])
+  const [viewportSize, setViewportSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  })
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const selectedServiceData = useMemo(
     () =>
@@ -139,6 +155,26 @@ export default function App() {
       sortedServiceItems[0],
     [selectedService],
   )
+
+  const point1X = polygonPoints[0]?.x ?? null
+  const point1Y = polygonPoints[0]?.y ?? null
+  const point2X = polygonPoints[1]?.x ?? null
+  const point2Y = polygonPoints[1]?.y ?? null
+  const point3X = polygonPoints[2]?.x ?? null
+  const point3Y = polygonPoints[2]?.y ?? null
+  const point4X = polygonPoints[3]?.x ?? null
+  const point4Y = polygonPoints[3]?.y ?? null
+
+  const polygonCoordinates = {
+    point1X,
+    point1Y,
+    point2X,
+    point2Y,
+    point3X,
+    point3Y,
+    point4X,
+    point4Y,
+  }
 
   const handleAccountClick = () => {
     console.log('Клик по аккаунту')
@@ -170,6 +206,7 @@ export default function App() {
       serviceTag: selectedServiceData.tag,
       latitude,
       longitude,
+      polygonCoordinates,
     })
   }
 
@@ -237,6 +274,57 @@ export default function App() {
     }
   }
 
+  const handlePointsModeToggle = () => {
+    setUsePointsMode((prev) => !prev)
+  }
+
+  const handlePolygonReset = () => {
+    setPolygonPoints([])
+    console.log('Полигон сброшен')
+  }
+
+  const handlePolygonSubmit = () => {
+    console.log('Заглушка ввода полигона:', {
+      serviceTag: selectedServiceTag,
+      polygonCoordinates,
+    })
+  }
+
+  const handleMapOverlayClick = (event) => {
+    if (!usePointsMode || currentPage !== 'details') {
+      return
+    }
+
+    if (polygonPoints.length >= 4) {
+      return
+    }
+
+    const nextPoint = {
+      x: event.clientX,
+      y: event.clientY,
+    }
+
+    setPolygonPoints((prev) => {
+      const nextPoints = [...prev, nextPoint]
+
+      console.log('Точки полигона:', nextPoints)
+      console.log('Координаты точек:', {
+        point1X: nextPoints[0]?.x ?? null,
+        point1Y: nextPoints[0]?.y ?? null,
+        point2X: nextPoints[1]?.x ?? null,
+        point2Y: nextPoints[1]?.y ?? null,
+        point3X: nextPoints[2]?.x ?? null,
+        point3Y: nextPoints[2]?.y ?? null,
+        point4X: nextPoints[3]?.x ?? null,
+        point4Y: nextPoints[3]?.y ?? null,
+      })
+
+      return nextPoints
+    })
+  }
+
+  const polygonPointsString = polygonPoints.map((point) => `${point.x},${point.y}`).join(' ')
+
   return (
     <div
       className="appShell"
@@ -272,10 +360,80 @@ export default function App() {
       </div>
 
       <div
+        onClick={handleMapOverlayClick}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1,
+          pointerEvents: currentPage === 'details' && usePointsMode ? 'auto' : 'none',
+          cursor:
+            currentPage === 'details' && usePointsMode && polygonPoints.length < 4
+              ? 'crosshair'
+              : 'default',
+        }}
+      >
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${viewportSize.width} ${viewportSize.height}`}
+          preserveAspectRatio="none"
+          style={{
+            display: 'block',
+            width: '100%',
+            height: '100%',
+          }}
+        >
+          {polygonPoints.length === 4 && (
+            <polygon
+              points={polygonPointsString}
+              fill="rgba(47, 111, 228, 0.24)"
+              stroke="rgba(47, 111, 228, 0.9)"
+              strokeWidth="3"
+              strokeLinejoin="round"
+            />
+          )}
+
+          {polygonPoints.length > 1 && polygonPoints.length < 4 && (
+            <polyline
+              points={polygonPointsString}
+              fill="none"
+              stroke="rgba(47, 111, 228, 0.9)"
+              strokeWidth="3"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          )}
+
+          {polygonPoints.map((point, index) => (
+            <g key={`${point.x}-${point.y}-${index}`}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r="8"
+                fill="rgba(47, 111, 228, 0.95)"
+                stroke="rgba(255,255,255,0.95)"
+                strokeWidth="3"
+              />
+              <text
+                x={point.x}
+                y={point.y - 14}
+                textAnchor="middle"
+                fontSize="14"
+                fontWeight="700"
+                fill="rgba(31, 42, 61, 0.95)"
+              >
+                {index + 1}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </div>
+
+      <div
         className="pageFrame"
         style={{
           position: 'relative',
-          zIndex: 1,
+          zIndex: 2,
           minHeight: '100vh',
           background: 'transparent',
           boxShadow: 'none',
@@ -287,7 +445,7 @@ export default function App() {
           className="topBar"
           style={{
             position: 'relative',
-            zIndex: 2,
+            zIndex: 3,
             pointerEvents: 'auto',
           }}
         >
@@ -342,7 +500,7 @@ export default function App() {
               position: 'absolute',
               top: '84px',
               right: '18px',
-              zIndex: 2,
+              zIndex: 3,
               width: '270px',
               border: '2px solid var(--stroke)',
               borderRadius: '24px',
@@ -376,74 +534,44 @@ export default function App() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
               }}
             >
-              <label
+              <button
+                type="button"
+                onClick={handlePointsModeToggle}
                 style={{
                   minHeight: '58px',
+                  border: 'none',
                   borderRight: '1px solid var(--stroke)',
-                  borderBottom: '1px solid var(--stroke)',
-                  background: 'transparent',
-                  color: 'var(--text-primary)',
+                  background: usePointsMode ? 'rgba(47, 111, 228, 0.22)' : 'transparent',
+                  color: usePointsMode ? 'var(--accent)' : 'var(--text-primary)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '10px',
                   padding: '12px 10px',
                   fontSize: '14px',
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  transition: 'background-color 0.15s ease, transform 0.15s ease',
+                }}
+                onMouseEnter={(event) => {
+                  if (!usePointsMode) {
+                    event.currentTarget.style.background = 'rgba(47, 111, 228, 0.12)'
+                  }
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.background = usePointsMode
+                    ? 'rgba(47, 111, 228, 0.22)'
+                    : 'transparent'
                 }}
               >
-                <input
-                  type="checkbox"
-                  checked={usePointsMode}
-                  onChange={(event) => setUsePointsMode(event.target.checked)}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    margin: 0,
-                    accentColor: 'var(--accent)',
-                    cursor: 'pointer',
-                  }}
-                />
-                <span>Точки</span>
-              </label>
-
-              <label
-                style={{
-                  minHeight: '58px',
-                  borderBottom: '1px solid var(--stroke)',
-                  background: 'transparent',
-                  color: 'var(--text-primary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  padding: '12px 10px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={useBrushMode}
-                  onChange={(event) => setUseBrushMode(event.target.checked)}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    margin: 0,
-                    accentColor: 'var(--accent)',
-                    cursor: 'pointer',
-                  }}
-                />
-                <span>Кисть</span>
-              </label>
+                Точки
+              </button>
 
               <button
                 type="button"
+                onClick={handlePolygonReset}
                 style={{
                   minHeight: '58px',
                   border: 'none',
@@ -473,6 +601,7 @@ export default function App() {
 
               <button
                 type="button"
+                onClick={handlePolygonSubmit}
                 style={{
                   minHeight: '58px',
                   border: 'none',
@@ -496,7 +625,7 @@ export default function App() {
                   event.currentTarget.style.background = 'var(--accent-soft)'
                 }}
               >
-                Сохранить
+                Ввод
               </button>
             </div>
           </div>
@@ -506,7 +635,7 @@ export default function App() {
           style={{
             marginTop: '20px',
             position: 'relative',
-            zIndex: 2,
+            zIndex: 3,
             pointerEvents: 'none',
           }}
         >
