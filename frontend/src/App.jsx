@@ -2,6 +2,14 @@ import { useMemo, useState } from 'react'
 import './App.css'
 import logoImage from './assets_for_app/LOGO.png'
 import grassImage from './assets_for_app/GRASS.png'
+import iceKillImage from './assets_for_app/ICEKILL.png'
+import leavesImage from './assets_for_app/LEAVES.png'
+import handImage from './assets_for_app/HAND.png'
+import mechImage from './assets_for_app/MECH.png'
+import snowHandImage from './assets_for_app/SNOWHAND.png'
+import mechSummerImage from './assets_for_app/MECHSUMMER.png'
+import coatingsImage from './assets_for_app/COATINGS.png'
+import garbCollectorImage from './assets_for_app/GARBCOLLECTOR.png'
 
 const YANDEX_MAP_EMBED_URL =
   'https://yandex.ru/map-widget/v1/?ll=37.588144%2C55.733842&z=10&lang=ru_RU'
@@ -31,7 +39,7 @@ const serviceItems = [
   { id: 'snow-cleaning', title: 'Уборка снега', price: 'от 20 ₽/м²', sortValue: 20,
     descr: 'Очистка покрытий от свежего и слежавшегося снега.' },
 
-  { id: 'mechanized-winter', title: 'Мехуборка зимняя', price: 'от 24 ₽/м²', sortValue: 24,
+  { id: 'mechanized-winter', title: 'Мехуборка летняя', price: 'от 24 ₽/м²', sortValue: 24,
     descr:'Подметальные машины, мойки высокого давления.' },
 
   { id: 'pressure-wash', title: 'Мойка покрытий', price: 'от 30 ₽/м²', sortValue: 30,
@@ -43,6 +51,18 @@ const serviceItems = [
   { id: 'container-site', title: 'Содержание КП', price: 'от 1 500 ₽/площадка', sortValue: 1501,
     descr:'Очистка территории вокруг баков, мытье контейнеров' },
 ]
+
+const serviceIcons = {
+  'anti-ice': iceKillImage,
+  'lawn-care': grassImage,
+  'leaf-collection': leavesImage,
+  'manual-cleaning': handImage,
+  'mechanized-summer': mechImage,
+  'snow-cleaning': snowHandImage,
+  'mechanized-winter': mechSummerImage,
+  'pressure-wash': coatingsImage,
+  'garbage-haul': garbCollectorImage,
+}
 
 const sortedServiceItems = [...serviceItems].sort((a, b) => a.sortValue - b.sortValue)
 
@@ -292,7 +312,7 @@ export default function App() {
               {sortedServiceItems.map((service) => {
                 const isActive = selectedService === service.id
                 const isHovered = hoveredService === service.id
-                const isLawnCare = service.id === 'lawn-care'
+                const serviceIcon = serviceIcons[service.id]
 
                 return (
                   <div
@@ -329,9 +349,9 @@ export default function App() {
                         overflow: 'hidden',
                       }}
                     >
-                      {isLawnCare && (
+                      {serviceIcon && (
                         <img
-                          src={grassImage}
+                          src={serviceIcon}
                           alt=""
                           aria-hidden="true"
                           style={{
