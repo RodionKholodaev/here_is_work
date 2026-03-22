@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import logoImage from './assets_for_app/LOGO.png'
 import grassImage from './assets_for_app/GRASS.png'
@@ -12,15 +12,78 @@ import coatingsImage from './assets_for_app/COATINGS.png'
 import garbCollectorImage from './assets_for_app/GARBCOLLECTOR.png'
 import LeftSidebar from './LeftSidebar'
 
-const INITIAL_MAP_CENTER = {
-  lng: 37.588144,
-  lat: 55.733842,
-}
-
-const INITIAL_MAP_ZOOM = 10
+const YANDEX_MAPS_API_KEY = '0e2f26fb-0dd2-4844-b9b2-1ff5867cb501'
 const YANDEX_GEOCODER_API_KEY = '0e2f26fb-0dd2-4844-b9b2-1ff5867cb501'
-const TILE_SIZE = 256
-const EARTH_RADIUS = 6378137
+
+const INITIAL_MAP_CENTER = [55.733842, 37.588144]
+const INITIAL_MAP_ZOOM = 10
+
+let yandexApiPromise = null
+
+const loadScript = (src, id) =>
+  new Promise((resolve, reject) => {
+    const existingScript = document.getElementById(id)
+
+    if (existingScript) {
+      if (existingScript.dataset.loaded === 'true') {
+        resolve()
+        return
+      }
+
+      existingScript.addEventListener('load', () => resolve(), { once: true })
+      existingScript.addEventListener(
+        'error',
+        () => reject(new Error(`Не удалось загрузить скрипт ${id}`)),
+        { once: true },
+      )
+      return
+    }
+
+    const script = document.createElement('script')
+    script.id = id
+    script.src = src
+    script.async = true
+
+    script.onload = () => {
+      script.dataset.loaded = 'true'
+      resolve()
+    }
+
+    script.onerror = () => {
+      reject(new Error(`Не удалось загрузить скрипт ${id}`))
+    }
+
+    document.head.appendChild(script)
+  })
+
+const loadYandexMapsApi = async () => {
+  if (window.ymaps?.util?.calculateArea) {
+    return window.ymaps
+  }
+
+  if (yandexApiPromise) {
+    return yandexApiPromise
+  }
+
+  yandexApiPromise = (async () => {
+    await loadScript(
+      `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(
+        YANDEX_MAPS_API_KEY,
+      )}&lang=ru_RU`,
+      'yandex-maps-api',
+    )
+
+    await loadScript(
+      'https://yastatic.net/s3/mapsapi-jslibs/area/0.0.1/util.calculateArea.min.js',
+      'yandex-area-plugin',
+    )
+
+    await window.ymaps.ready(['util.calculateArea'])
+    return window.ymaps
+  })()
+
+  return yandexApiPromise
+}
 
 const navItems = [
   { id: 'how', label: 'Как работает' },
@@ -125,87 +188,17 @@ const serviceIcons = {
 
 const sortedServiceItems = [...serviceItems].sort((a, b) => a.sortValue - b.sortValue)
 
-const degreesToRadians = (value) => (value * Math.PI) / 180
-const radiansToDegrees = (value) => (value * 180) / Math.PI
-
-const lngToWorldX = (lng, zoom) => {
-  const scale = TILE_SIZE * 2 ** zoom
-  return ((lng + 180) / 360) * scale
-}
-
-const latToWorldY = (lat, zoom) => {
-  const scale = TILE_SIZE * 2 ** zoom
-  const sinLat = Math.sin(degreesToRadians(lat))
-  const mercatorY =
-    0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)
-
-  return mercatorY * scale
-}
-
-const worldXToLng = (x, zoom) => {
-  const scale = TILE_SIZE * 2 ** zoom
-  return (x / scale) * 360 - 180
-}
-
-const worldYToLat = (y, zoom) => {
-  const scale = TILE_SIZE * 2 ** zoom
-  const normalizedY = y / scale
-  const mercator = Math.PI * (1 - 2 * normalizedY)
-  return radiansToDegrees(Math.atan(Math.sinh(mercator)))
-}
-
-const screenPointToGeo = (screenX, screenY, viewportWidth, viewportHeight, center, zoom) => {
-  const centerWorldX = lngToWorldX(center.lng, zoom)
-  const centerWorldY = latToWorldY(center.lat, zoom)
-
-  const pointWorldX = centerWorldX + (screenX - viewportWidth / 2)
-  const pointWorldY = centerWorldY + (screenY - viewportHeight / 2)
-
-  return {
-    lng: worldXToLng(pointWorldX, zoom),
-    lat: worldYToLat(pointWorldY, zoom),
-  }
-}
-
-const calculatePolygonAreaSquareMeters = (points) => {
-  if (points.length < 3) {
-    return 0
+const createPolygonCoordinates = (points) => {
+  if (points.length !== 4) {
+    return []
   }
 
-  const averageLat =
-    points.reduce((sum, point) => sum + point.lat, 0) / points.length
-  const averageLng =
-    points.reduce((sum, point) => sum + point.lng, 0) / points.length
-
-  const averageLatRad = degreesToRadians(averageLat)
-  const averageLngRad = degreesToRadians(averageLng)
-
-  const projectedPoints = points.map((point) => {
-    const latRad = degreesToRadians(point.lat)
-    const lngRad = degreesToRadians(point.lng)
-
-    return {
-      x: EARTH_RADIUS * (lngRad - averageLngRad) * Math.cos(averageLatRad),
-      y: EARTH_RADIUS * (latRad - averageLatRad),
-    }
-  })
-
-  let areaAccumulator = 0
-
-  for (let index = 0; index < projectedPoints.length; index += 1) {
-    const currentPoint = projectedPoints[index]
-    const nextPoint = projectedPoints[(index + 1) % projectedPoints.length]
-
-    areaAccumulator += currentPoint.x * nextPoint.y - nextPoint.x * currentPoint.y
-  }
-
-  return Math.abs(areaAccumulator) / 2
+  const ring = points.map((point) => [point.lat, point.lng])
+  ring.push([points[0].lat, points[0].lng])
+  return [ring]
 }
 
-const formatArea = (area) => {
-  const roundedArea = Math.round(area)
-  return roundedArea.toLocaleString('ru-RU')
-}
+const formatArea = (area) => Math.round(area).toLocaleString('ru-RU')
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('how')
@@ -215,29 +208,31 @@ export default function App() {
   const [hoveredService, setHoveredService] = useState(null)
   const [currentPage, setCurrentPage] = useState('services')
   const [usePointsMode, setUsePointsMode] = useState(false)
-  const [mapCenter, setMapCenter] = useState(INITIAL_MAP_CENTER)
-  const [mapZoom, setMapZoom] = useState(INITIAL_MAP_ZOOM)
-  const [latitude, setLatitude] = useState(INITIAL_MAP_CENTER.lat)
-  const [longitude, setLongitude] = useState(INITIAL_MAP_CENTER.lng)
+  const [latitude, setLatitude] = useState(INITIAL_MAP_CENTER[0])
+  const [longitude, setLongitude] = useState(INITIAL_MAP_CENTER[1])
   const [polygonPoints, setPolygonPoints] = useState([])
+  const [previewAreaSquareMeters, setPreviewAreaSquareMeters] = useState(null)
   const [savedAreaSquareMeters, setSavedAreaSquareMeters] = useState(null)
-  const [isPolygonHovered, setIsPolygonHovered] = useState(false)
-  const [viewportSize, setViewportSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  })
+
+  const mapContainerRef = useRef(null)
+  const mapRef = useRef(null)
+  const pointMarkersRef = useRef([])
+  const polygonRef = useRef(null)
+  const currentPageRef = useRef(currentPage)
+  const usePointsModeRef = useRef(usePointsMode)
+  const polygonPointsRef = useRef(polygonPoints)
 
   useEffect(() => {
-    const handleResize = () => {
-      setViewportSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      })
-    }
+    currentPageRef.current = currentPage
+  }, [currentPage])
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  useEffect(() => {
+    usePointsModeRef.current = usePointsMode
+  }, [usePointsMode])
+
+  useEffect(() => {
+    polygonPointsRef.current = polygonPoints
+  }, [polygonPoints])
 
   const selectedServiceData = useMemo(
     () =>
@@ -246,52 +241,156 @@ export default function App() {
     [selectedService],
   )
 
-  const mapUrl = useMemo(
-    () =>
-      `https://yandex.ru/map-widget/v1/?ll=${mapCenter.lng}%2C${mapCenter.lat}&z=${mapZoom}&lang=ru_RU`,
-    [mapCenter, mapZoom],
-  )
+  useEffect(() => {
+    let isMounted = true
 
-  const point1Lng = polygonPoints[0]?.lng ?? null
-  const point1Lat = polygonPoints[0]?.lat ?? null
-  const point2Lng = polygonPoints[1]?.lng ?? null
-  const point2Lat = polygonPoints[1]?.lat ?? null
-  const point3Lng = polygonPoints[2]?.lng ?? null
-  const point3Lat = polygonPoints[2]?.lat ?? null
-  const point4Lng = polygonPoints[3]?.lng ?? null
-  const point4Lat = polygonPoints[3]?.lat ?? null
+    const initMap = async () => {
+      try {
+        const ymaps = await loadYandexMapsApi()
 
-  const polygonCoordinates = {
-    point1Lng,
-    point1Lat,
-    point2Lng,
-    point2Lat,
-    point3Lng,
-    point3Lat,
-    point4Lng,
-    point4Lat,
-  }
+        if (!isMounted || !mapContainerRef.current || mapRef.current) {
+          return
+        }
 
-  const currentPolygonAreaSquareMeters = useMemo(
-    () => calculatePolygonAreaSquareMeters(polygonPoints),
-    [polygonPoints],
-  )
+        const mapInstance = new ymaps.Map(
+          mapContainerRef.current,
+          {
+            center: INITIAL_MAP_CENTER,
+            zoom: INITIAL_MAP_ZOOM,
+            controls: ['zoomControl'],
+          },
+          {
+            suppressMapOpenBlock: true,
+          },
+        )
 
-  const polygonTooltipPosition = useMemo(() => {
+        mapInstance.events.add('click', (event) => {
+          if (currentPageRef.current !== 'details' || !usePointsModeRef.current) {
+            return
+          }
+
+          if (polygonPointsRef.current.length >= 4) {
+            return
+          }
+
+          const coords = event.get('coords')
+
+          setPolygonPoints((prev) => {
+            if (prev.length >= 4) {
+              return prev
+            }
+
+            const nextPoints = [
+              ...prev,
+              {
+                lat: coords[0],
+                lng: coords[1],
+              },
+            ]
+
+            return nextPoints
+          })
+        })
+
+        mapInstance.events.add('boundschange', () => {
+          const center = mapInstance.getCenter()
+          setLatitude(center[0])
+          setLongitude(center[1])
+        })
+
+        mapRef.current = mapInstance
+      } catch (error) {
+        console.error('Ошибка инициализации карты:', error)
+      }
+    }
+
+    initMap()
+
+    return () => {
+      isMounted = false
+
+      if (mapRef.current) {
+        mapRef.current.destroy()
+        mapRef.current = null
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!window.ymaps?.util?.calculateArea) {
+      return
+    }
+
     if (polygonPoints.length !== 4) {
-      return null
+      setPreviewAreaSquareMeters(null)
+      return
     }
 
-    const averageX =
-      polygonPoints.reduce((sum, point) => sum + point.x, 0) / polygonPoints.length
-    const averageY =
-      polygonPoints.reduce((sum, point) => sum + point.y, 0) / polygonPoints.length
+    const polygonCoordinates = createPolygonCoordinates(polygonPoints)
 
-    return {
-      x: averageX + 16,
-      y: averageY - 12,
-    }
+    const polygonGeoObject = new window.ymaps.GeoObject({
+      geometry: {
+        type: 'Polygon',
+        coordinates: polygonCoordinates,
+      },
+    })
+
+    const nextArea = Math.round(window.ymaps.util.calculateArea(polygonGeoObject))
+    setPreviewAreaSquareMeters(nextArea)
   }, [polygonPoints])
+
+  useEffect(() => {
+    if (!mapRef.current || !window.ymaps) {
+      return
+    }
+
+    const ymaps = window.ymaps
+    const mapInstance = mapRef.current
+
+    pointMarkersRef.current.forEach((marker) => {
+      mapInstance.geoObjects.remove(marker)
+    })
+    pointMarkersRef.current = []
+
+    if (polygonRef.current) {
+      mapInstance.geoObjects.remove(polygonRef.current)
+      polygonRef.current = null
+    }
+
+    polygonPoints.forEach((point, index) => {
+      const marker = new ymaps.Placemark(
+        [point.lat, point.lng],
+        {
+          iconCaption: `${index + 1}`,
+        },
+        {
+          preset: 'islands#blueCircleDotIconWithCaption',
+        },
+      )
+
+      pointMarkersRef.current.push(marker)
+      mapInstance.geoObjects.add(marker)
+    })
+
+    if (polygonPoints.length === 4) {
+      const polygonCoordinates = createPolygonCoordinates(polygonPoints)
+      const polygon = new ymaps.Polygon(
+        polygonCoordinates,
+        {
+          hintContent: `Площадь области ${formatArea(previewAreaSquareMeters ?? 0)} м²`,
+        },
+        {
+          fillColor: '2f6fe455',
+          strokeColor: '2f6fe4ff',
+          strokeWidth: 3,
+          interactivityModel: 'default#geoObject',
+        },
+      )
+
+      polygonRef.current = polygon
+      mapInstance.geoObjects.add(polygon)
+    }
+  }, [polygonPoints, previewAreaSquareMeters])
 
   const handleAccountClick = () => {
     console.log('Клик по аккаунту')
@@ -323,7 +422,7 @@ export default function App() {
       serviceTag: selectedServiceData.tag,
       latitude,
       longitude,
-      polygonCoordinates,
+      polygonPoints,
       savedAreaSquareMeters,
     })
   }
@@ -377,11 +476,12 @@ export default function App() {
 
       setLongitude(nextLongitude)
       setLatitude(nextLatitude)
-      setMapCenter({
-        lng: nextLongitude,
-        lat: nextLatitude,
-      })
-      setMapZoom(16)
+
+      if (mapRef.current) {
+        mapRef.current.setCenter([nextLatitude, nextLongitude], 16, {
+          duration: 300,
+        })
+      }
 
       console.log('Карта перемещена на координаты:', {
         latitude: nextLatitude,
@@ -398,71 +498,25 @@ export default function App() {
 
   const handlePolygonReset = () => {
     setPolygonPoints([])
+    setPreviewAreaSquareMeters(null)
     setSavedAreaSquareMeters(null)
-    setIsPolygonHovered(false)
     console.log('Полигон сброшен')
   }
 
   const handlePolygonSubmit = () => {
-    if (polygonPoints.length !== 4) {
+    if (polygonPoints.length !== 4 || previewAreaSquareMeters === null) {
       console.log('Сначала нужно поставить 4 точки')
       return
     }
 
-    setSavedAreaSquareMeters(currentPolygonAreaSquareMeters)
+    setSavedAreaSquareMeters(previewAreaSquareMeters)
 
     console.log('Площадь сохранена:', {
-      areaSquareMeters: currentPolygonAreaSquareMeters,
-      polygonCoordinates,
+      areaSquareMeters: previewAreaSquareMeters,
+      polygonPoints,
       serviceTag: selectedServiceTag,
     })
   }
-
-  const handleMapOverlayClick = (event) => {
-    if (!usePointsMode || currentPage !== 'details') {
-      return
-    }
-
-    if (polygonPoints.length >= 4) {
-      return
-    }
-
-    const geoPoint = screenPointToGeo(
-      event.clientX,
-      event.clientY,
-      viewportSize.width,
-      viewportSize.height,
-      mapCenter,
-      mapZoom,
-    )
-
-    const nextPoint = {
-      x: event.clientX,
-      y: event.clientY,
-      lng: geoPoint.lng,
-      lat: geoPoint.lat,
-    }
-
-    setPolygonPoints((prev) => {
-      const nextPoints = [...prev, nextPoint]
-
-      console.log('Точки полигона:', nextPoints)
-      console.log('Координаты точек:', {
-        point1Lng: nextPoints[0]?.lng ?? null,
-        point1Lat: nextPoints[0]?.lat ?? null,
-        point2Lng: nextPoints[1]?.lng ?? null,
-        point2Lat: nextPoints[1]?.lat ?? null,
-        point3Lng: nextPoints[2]?.lng ?? null,
-        point3Lat: nextPoints[2]?.lat ?? null,
-        point4Lng: nextPoints[3]?.lng ?? null,
-        point4Lat: nextPoints[3]?.lat ?? null,
-      })
-
-      return nextPoints
-    })
-  }
-
-  const polygonPointsString = polygonPoints.map((point) => `${point.x},${point.y}`).join(' ')
 
   return (
     <div
@@ -473,7 +527,7 @@ export default function App() {
       }}
     >
       <div
-        aria-hidden="true"
+        ref={mapContainerRef}
         style={{
           position: 'fixed',
           inset: 0,
@@ -481,125 +535,13 @@ export default function App() {
           overflow: 'hidden',
           background: '#e5e7eb',
         }}
-      >
-        <iframe
-          src={mapUrl}
-          title="Яндекс Карта"
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          allowFullScreen
-          style={{
-            display: 'block',
-            border: '0',
-            width: '100%',
-            height: '100%',
-          }}
-        />
-      </div>
-
-      <div
-        onClick={handleMapOverlayClick}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 1,
-          pointerEvents: currentPage === 'details' && usePointsMode ? 'auto' : 'none',
-          cursor:
-            currentPage === 'details' && usePointsMode && polygonPoints.length < 4
-              ? 'crosshair'
-              : 'default',
-        }}
-      >
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${viewportSize.width} ${viewportSize.height}`}
-          preserveAspectRatio="none"
-          style={{
-            display: 'block',
-            width: '100%',
-            height: '100%',
-          }}
-        >
-          {polygonPoints.length === 4 && (
-            <polygon
-              points={polygonPointsString}
-              fill="rgba(47, 111, 228, 0.24)"
-              stroke="rgba(47, 111, 228, 0.9)"
-              strokeWidth="3"
-              strokeLinejoin="round"
-              onMouseEnter={() => setIsPolygonHovered(true)}
-              onMouseLeave={() => setIsPolygonHovered(false)}
-            />
-          )}
-
-          {polygonPoints.length > 1 && polygonPoints.length < 4 && (
-            <polyline
-              points={polygonPointsString}
-              fill="none"
-              stroke="rgba(47, 111, 228, 0.9)"
-              strokeWidth="3"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          )}
-
-          {polygonPoints.map((point, index) => (
-            <g key={`${point.x}-${point.y}-${index}`}>
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r="8"
-                fill="rgba(47, 111, 228, 0.95)"
-                stroke="rgba(255,255,255,0.95)"
-                strokeWidth="3"
-              />
-              <text
-                x={point.x}
-                y={point.y - 14}
-                textAnchor="middle"
-                fontSize="14"
-                fontWeight="700"
-                fill="rgba(31, 42, 61, 0.95)"
-              >
-                {index + 1}
-              </text>
-            </g>
-          ))}
-        </svg>
-      </div>
-
-      {polygonPoints.length === 4 && isPolygonHovered && polygonTooltipPosition && (
-        <div
-          style={{
-            position: 'fixed',
-            left: `${polygonTooltipPosition.x}px`,
-            top: `${polygonTooltipPosition.y}px`,
-            zIndex: 4,
-            pointerEvents: 'none',
-            padding: '10px 12px',
-            border: '1px solid var(--stroke)',
-            borderRadius: '14px',
-            background: 'var(--surface)',
-            boxShadow: 'var(--shadow-soft)',
-            color: 'var(--text-primary)',
-            fontSize: '13px',
-            fontWeight: 600,
-            lineHeight: 1.35,
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-          }}
-        >
-          Площадь области {formatArea(currentPolygonAreaSquareMeters)} м²
-        </div>
-      )}
+      />
 
       <div
         className="pageFrame"
         style={{
           position: 'relative',
-          zIndex: 2,
+          zIndex: 1,
           minHeight: '100vh',
           background: 'transparent',
           boxShadow: 'none',
@@ -805,7 +747,7 @@ export default function App() {
             pointerEvents: 'none',
           }}
         >
-          <LeftSidebar
+         <LeftSidebar
             address={address}
             setAddress={setAddress}
             handleAddressSubmit={handleAddressSubmit}
@@ -816,6 +758,7 @@ export default function App() {
             hoveredService={hoveredService}
             setHoveredService={setHoveredService}
             handleContinueClick={handleContinueClick}
+            currentPage={currentPage}
           />
         </main>
       </div>
