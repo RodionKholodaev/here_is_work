@@ -1,4 +1,4 @@
 class PriceService:
     @staticmethod
-    def get_price():
+    def calculate_price():
         return 100.0

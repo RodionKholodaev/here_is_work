@@ -71,8 +71,16 @@ class WorkerProfile(Base):
     # user: Mapped["User"] = relationship(back_populates="worker_profile")
 
 
-# заказы
 
+class OrderStatus:
+    CREATED = "created"
+    SEARCHING = "searching"
+    ASSIGNED = "assigned"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
+    CANCELLED = "cancelled"
+
+# заказы
 class Order(Base):
     __tablename__ = "orders"
 
@@ -100,7 +108,7 @@ class Order(Base):
 
     status: Mapped[str] = mapped_column(String(20)) # created, searching, assigned, in_progress, done, cancelled
 
-    price: Mapped[float] = mapped_column(Numeric(10, 2))
+    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=func.now()
