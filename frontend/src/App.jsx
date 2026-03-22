@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import './App.css'
+import logoImage from './assets_for_app/LOGO.png'
+import grassImage from './assets_for_app/GRASS.png'
 
 const YANDEX_MAP_EMBED_URL =
   'https://yandex.ru/map-widget/v1/?ll=37.588144%2C55.733842&z=10&lang=ru_RU'
-
-const YANDEX_GEOCODER_API_KEY = '0e2f26fb-0dd2-4844-b9b2-1ff5867cb501'
 
 const navItems = [
   { id: 'how', label: 'Как работает' },
@@ -51,9 +51,6 @@ export default function App() {
   const [selectedService, setSelectedService] = useState(sortedServiceItems[0].id)
   const [address, setAddress] = useState('')
   const [hoveredService, setHoveredService] = useState(null)
-  const [mapUrl, setMapUrl] = useState(YANDEX_MAP_EMBED_URL)
-  const [latitude, setLatitude] = useState(null)
-  const [longitude, setLongitude] = useState(null)
 
   const selectedServiceData = useMemo(
     () =>
@@ -62,90 +59,43 @@ export default function App() {
     [selectedService],
   )
 
-  const handleLogoClick = () => {
-    console.log('Клик по логотипу')
-  }
-
   const handleAccountClick = () => {
     console.log('Клик по аккаунту')
   }
 
   const handleContinueClick = () => {
-    console.log(`Продолжить: ${selectedServiceData.title}`, address, {
-      latitude,
-      longitude,
-    })
+    console.log(`Продолжить: ${selectedServiceData.title}`, address)
   }
 
   const handleAddressSubmit = async () => {
-    console.log('Ввод адреса:', address)
-
-    const trimmedAddress = address.trim()
-
-    if (!trimmedAddress) {
-      console.error('Адрес пустой')
-      return
-    }
+    console.log('Ввод адреса:', address);
 
     try {
-      console.log('Отправляем запрос в Yandex Geocoder...')
+      console.log('Отправляем запрос...');
 
-      const geocoderUrl =
-        `https://geocode-maps.yandex.ru/v1/?apikey=${encodeURIComponent(YANDEX_GEOCODER_API_KEY)}&geocode=${encodeURIComponent(trimmedAddress)}&format=json&lang=ru_RU&results=1`
+      const response = await fetch(
+        'http://127.0.0.1:8000/order/get-coordinates',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            adress: address
+          }),
+        }
+      );
 
-      const response = await fetch(geocoderUrl, {
-        method: 'GET',
-      })
+      console.log('Ответ получен:', response);
 
-      console.log('Ответ получен:', response)
+      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(`Ошибка Geocoder API: ${response.status}`)
-      }
+      console.log('JSON получен:', data);
 
-      const data = await response.json()
-
-      console.log('JSON получен:', data)
-
-      const firstFeature =
-        data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject
-
-      const pointPos = firstFeature?.Point?.pos
-
-      if (!pointPos) {
-        console.error('Координаты не найдены в ответе:', data)
-        return
-      }
-
-      const [rawLongitude, rawLatitude] = pointPos.trim().split(/\s+/)
-      const nextLongitude = Number(rawLongitude)
-      const nextLatitude = Number(rawLatitude)
-
-      if (!Number.isFinite(nextLongitude) || !Number.isFinite(nextLatitude)) {
-        console.error('Некорректные координаты:', pointPos)
-        return
-      }
-
-      setLongitude(nextLongitude)
-      setLatitude(nextLatitude)
-      console.log('Координаты:', {
-        longitude: nextLongitude,
-        latitude: nextLatitude,
-                })
-
-      const newMapUrl =
-        `https://yandex.ru/map-widget/v1/?ll=${nextLongitude}%2C${nextLatitude}&z=16&lang=ru_RU`
-
-      setMapUrl(newMapUrl)
-
-      console.log('Сохранённые координаты:', {
-        latitude: nextLatitude,
-        longitude: nextLongitude,
-      })
     } catch (error) {
-      console.error('Ошибка запроса:', error)
+      console.error('Ошибка запроса:', error);
     }
-  }
+  };
 
   return (
     <div
@@ -166,7 +116,7 @@ export default function App() {
         }}
       >
         <iframe
-          src={mapUrl}
+          src={YANDEX_MAP_EMBED_URL}
           title="Яндекс Карта"
           width="100%"
           height="100%"
@@ -201,13 +151,28 @@ export default function App() {
             pointerEvents: 'auto',
           }}
         >
-          <button
-            type="button"
+          <div
             className="logoButton"
-            onClick={handleLogoClick}
+            aria-label="Логотип"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'default',
+              opacity: 1.5
+            }}
           >
-            Логотип
-          </button>
+            <img
+              src={logoImage}
+              alt="Логотип"
+              style={{
+                maxWidth: '300%',
+                maxHeight: '240%',
+                objectFit: 'contain',
+                display: 'block',
+              }}
+            />
+          </div>
 
           <nav className="topNav" aria-label="Основная навигация">
             {navItems.map((item) => (
@@ -327,6 +292,7 @@ export default function App() {
               {sortedServiceItems.map((service) => {
                 const isActive = selectedService === service.id
                 const isHovered = hoveredService === service.id
+                const isLawnCare = service.id === 'lawn-care'
 
                 return (
                   <div
@@ -359,8 +325,29 @@ export default function App() {
                         transition:
                           'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
                         boxShadow: isActive ? 'var(--shadow-soft)' : 'none',
+                        position: 'relative',
+                        overflow: 'hidden',
                       }}
                     >
+                      {isLawnCare && (
+                        <img
+                          src={grassImage}
+                          alt=""
+                          aria-hidden="true"
+                          style={{
+                            position: 'absolute',
+                            top: '-20px',
+                            left: '5px',
+                            width: '150px',
+                            height: '150px',
+                            objectFit: 'contain',
+                            opacity: 0.32,
+                            zIndex: 0,
+                            pointerEvents: 'none',
+                          }}
+                        />
+                      )}
+
                       <span
                         style={{
                           display: 'block',
@@ -368,6 +355,8 @@ export default function App() {
                           fontWeight: 700,
                           lineHeight: 1.2,
                           minHeight: '38px',
+                          position: 'relative',
+                          zIndex: 1,
                         }}
                       >
                         {service.title}
@@ -379,6 +368,8 @@ export default function App() {
                           fontSize: '14px',
                           fontWeight: 700,
                           color: isActive ? 'var(--accent)' : '#475569',
+                          position: 'relative',
+                          zIndex: 1,
                         }}
                       >
                         {service.price}
