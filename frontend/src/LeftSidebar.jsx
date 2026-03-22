@@ -11,6 +11,7 @@ export default function LeftSidebar({
   hoveredService,
   setHoveredService,
   handleContinueClick,
+  onOrderSubmit,
   currentPage,
   savedArea,
 }) {
@@ -31,10 +32,16 @@ export default function LeftSidebar({
     }
   }, [savedArea])
 
-  // Шаблон (пока пустой, займемся позже)
   const handleSubmitOrder = async () => {
-    console.log('Заказ готов к отправке!')
-  }
+  onOrderSubmit({
+    date,
+    startTime,
+    endTime,
+    area,
+    comment,
+    isUrgent,
+    })
+    }
 
   return (
     <aside

@@ -11,6 +11,7 @@ import mechSummerImage from './assets_for_app/MECHSUMMER.png'
 import coatingsImage from './assets_for_app/COATINGS.png'
 import garbCollectorImage from './assets_for_app/GARBCOLLECTOR.png'
 import LeftSidebar from './LeftSidebar'
+import Search_and_finish from './Search_and_finish'
 
 const YANDEX_MAPS_API_KEY = '0e2f26fb-0dd2-4844-b9b2-1ff5867cb501'
 const YANDEX_GEOCODER_API_KEY = '0e2f26fb-0dd2-4844-b9b2-1ff5867cb501'
@@ -213,6 +214,7 @@ export default function App() {
   const [polygonPoints, setPolygonPoints] = useState([])
   const [previewAreaSquareMeters, setPreviewAreaSquareMeters] = useState(null)
   const [savedAreaSquareMeters, setSavedAreaSquareMeters] = useState(null)
+  const [orderDraft, setOrderDraft] = useState(null)
 
   const mapContainerRef = useRef(null)
   const mapRef = useRef(null)
@@ -518,6 +520,20 @@ export default function App() {
     })
   }
 
+  const handleOrderSubmit = (orderData) => {
+    setOrderDraft(orderData)
+    setCurrentPage('finish')
+  }
+
+  const handleOrderCancel = () => {
+    setOrderDraft(null)
+    setPolygonPoints([])
+    setPreviewAreaSquareMeters(null)
+    setSavedAreaSquareMeters(null)
+    setUsePointsMode(false)
+    setCurrentPage('services')
+  }
+
   return (
     <div
       className="appShell"
@@ -747,20 +763,36 @@ export default function App() {
             pointerEvents: 'none',
           }}
         >
-         <LeftSidebar
-            address={address}
-            setAddress={setAddress}
-            handleAddressSubmit={handleAddressSubmit}
-            sortedServiceItems={sortedServiceItems}
-            serviceIcons={serviceIcons}
-            selectedService={selectedService}
-            setSelectedService={setSelectedService}
-            hoveredService={hoveredService}
-            setHoveredService={setHoveredService}
-            handleContinueClick={handleContinueClick}
-            currentPage={currentPage}
-            savedArea={savedAreaSquareMeters}
-          />
+          {currentPage === 'finish' ? (
+            <Search_and_finish
+              selectedServiceData={selectedServiceData}
+              selectedServiceTag={selectedServiceTag}
+              date={orderDraft?.date}
+              startTime={orderDraft?.startTime}
+              endTime={orderDraft?.endTime}
+              area={orderDraft?.area}
+              comment={orderDraft?.comment}
+              isUrgent={orderDraft?.isUrgent}
+              savedAreaSquareMeters={savedAreaSquareMeters}
+              onCancel={handleOrderCancel}
+            />
+          ) : (
+            <LeftSidebar
+              address={address}
+              setAddress={setAddress}
+              handleAddressSubmit={handleAddressSubmit}
+              sortedServiceItems={sortedServiceItems}
+              serviceIcons={serviceIcons}
+              selectedService={selectedService}
+              setSelectedService={setSelectedService}
+              hoveredService={hoveredService}
+              setHoveredService={setHoveredService}
+              handleContinueClick={handleContinueClick}
+              onOrderSubmit={handleOrderSubmit}
+              currentPage={currentPage}
+              savedArea={savedAreaSquareMeters}
+            />
+          )}
         </main>
       </div>
     </div>
