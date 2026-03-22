@@ -12,10 +12,15 @@ import coatingsImage from './assets_for_app/COATINGS.png'
 import garbCollectorImage from './assets_for_app/GARBCOLLECTOR.png'
 import LeftSidebar from './LeftSidebar'
 
-const YANDEX_MAP_EMBED_URL =
-  'https://yandex.ru/map-widget/v1/?ll=37.588144%2C55.733842&z=10&lang=ru_RU'
+const INITIAL_MAP_CENTER = {
+  lng: 37.588144,
+  lat: 55.733842,
+}
 
+const INITIAL_MAP_ZOOM = 10
 const YANDEX_GEOCODER_API_KEY = '0e2f26fb-0dd2-4844-b9b2-1ff5867cb501'
+const TILE_SIZE = 256
+const EARTH_RADIUS = 6378137
 
 const navItems = [
   { id: 'how', label: 'Как работает' },
@@ -120,6 +125,88 @@ const serviceIcons = {
 
 const sortedServiceItems = [...serviceItems].sort((a, b) => a.sortValue - b.sortValue)
 
+const degreesToRadians = (value) => (value * Math.PI) / 180
+const radiansToDegrees = (value) => (value * 180) / Math.PI
+
+const lngToWorldX = (lng, zoom) => {
+  const scale = TILE_SIZE * 2 ** zoom
+  return ((lng + 180) / 360) * scale
+}
+
+const latToWorldY = (lat, zoom) => {
+  const scale = TILE_SIZE * 2 ** zoom
+  const sinLat = Math.sin(degreesToRadians(lat))
+  const mercatorY =
+    0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)
+
+  return mercatorY * scale
+}
+
+const worldXToLng = (x, zoom) => {
+  const scale = TILE_SIZE * 2 ** zoom
+  return (x / scale) * 360 - 180
+}
+
+const worldYToLat = (y, zoom) => {
+  const scale = TILE_SIZE * 2 ** zoom
+  const normalizedY = y / scale
+  const mercator = Math.PI * (1 - 2 * normalizedY)
+  return radiansToDegrees(Math.atan(Math.sinh(mercator)))
+}
+
+const screenPointToGeo = (screenX, screenY, viewportWidth, viewportHeight, center, zoom) => {
+  const centerWorldX = lngToWorldX(center.lng, zoom)
+  const centerWorldY = latToWorldY(center.lat, zoom)
+
+  const pointWorldX = centerWorldX + (screenX - viewportWidth / 2)
+  const pointWorldY = centerWorldY + (screenY - viewportHeight / 2)
+
+  return {
+    lng: worldXToLng(pointWorldX, zoom),
+    lat: worldYToLat(pointWorldY, zoom),
+  }
+}
+
+const calculatePolygonAreaSquareMeters = (points) => {
+  if (points.length < 3) {
+    return 0
+  }
+
+  const averageLat =
+    points.reduce((sum, point) => sum + point.lat, 0) / points.length
+  const averageLng =
+    points.reduce((sum, point) => sum + point.lng, 0) / points.length
+
+  const averageLatRad = degreesToRadians(averageLat)
+  const averageLngRad = degreesToRadians(averageLng)
+
+  const projectedPoints = points.map((point) => {
+    const latRad = degreesToRadians(point.lat)
+    const lngRad = degreesToRadians(point.lng)
+
+    return {
+      x: EARTH_RADIUS * (lngRad - averageLngRad) * Math.cos(averageLatRad),
+      y: EARTH_RADIUS * (latRad - averageLatRad),
+    }
+  })
+
+  let areaAccumulator = 0
+
+  for (let index = 0; index < projectedPoints.length; index += 1) {
+    const currentPoint = projectedPoints[index]
+    const nextPoint = projectedPoints[(index + 1) % projectedPoints.length]
+
+    areaAccumulator += currentPoint.x * nextPoint.y - nextPoint.x * currentPoint.y
+  }
+
+  return Math.abs(areaAccumulator) / 2
+}
+
+const formatArea = (area) => {
+  const roundedArea = Math.round(area)
+  return roundedArea.toLocaleString('ru-RU')
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('how')
   const [selectedService, setSelectedService] = useState(sortedServiceItems[0].id)
@@ -128,10 +215,13 @@ export default function App() {
   const [hoveredService, setHoveredService] = useState(null)
   const [currentPage, setCurrentPage] = useState('services')
   const [usePointsMode, setUsePointsMode] = useState(false)
-  const [mapUrl, setMapUrl] = useState(YANDEX_MAP_EMBED_URL)
-  const [latitude, setLatitude] = useState(null)
-  const [longitude, setLongitude] = useState(null)
+  const [mapCenter, setMapCenter] = useState(INITIAL_MAP_CENTER)
+  const [mapZoom, setMapZoom] = useState(INITIAL_MAP_ZOOM)
+  const [latitude, setLatitude] = useState(INITIAL_MAP_CENTER.lat)
+  const [longitude, setLongitude] = useState(INITIAL_MAP_CENTER.lng)
   const [polygonPoints, setPolygonPoints] = useState([])
+  const [savedAreaSquareMeters, setSavedAreaSquareMeters] = useState(null)
+  const [isPolygonHovered, setIsPolygonHovered] = useState(false)
   const [viewportSize, setViewportSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -156,25 +246,52 @@ export default function App() {
     [selectedService],
   )
 
-  const point1X = polygonPoints[0]?.x ?? null
-  const point1Y = polygonPoints[0]?.y ?? null
-  const point2X = polygonPoints[1]?.x ?? null
-  const point2Y = polygonPoints[1]?.y ?? null
-  const point3X = polygonPoints[2]?.x ?? null
-  const point3Y = polygonPoints[2]?.y ?? null
-  const point4X = polygonPoints[3]?.x ?? null
-  const point4Y = polygonPoints[3]?.y ?? null
+  const mapUrl = useMemo(
+    () =>
+      `https://yandex.ru/map-widget/v1/?ll=${mapCenter.lng}%2C${mapCenter.lat}&z=${mapZoom}&lang=ru_RU`,
+    [mapCenter, mapZoom],
+  )
+
+  const point1Lng = polygonPoints[0]?.lng ?? null
+  const point1Lat = polygonPoints[0]?.lat ?? null
+  const point2Lng = polygonPoints[1]?.lng ?? null
+  const point2Lat = polygonPoints[1]?.lat ?? null
+  const point3Lng = polygonPoints[2]?.lng ?? null
+  const point3Lat = polygonPoints[2]?.lat ?? null
+  const point4Lng = polygonPoints[3]?.lng ?? null
+  const point4Lat = polygonPoints[3]?.lat ?? null
 
   const polygonCoordinates = {
-    point1X,
-    point1Y,
-    point2X,
-    point2Y,
-    point3X,
-    point3Y,
-    point4X,
-    point4Y,
+    point1Lng,
+    point1Lat,
+    point2Lng,
+    point2Lat,
+    point3Lng,
+    point3Lat,
+    point4Lng,
+    point4Lat,
   }
+
+  const currentPolygonAreaSquareMeters = useMemo(
+    () => calculatePolygonAreaSquareMeters(polygonPoints),
+    [polygonPoints],
+  )
+
+  const polygonTooltipPosition = useMemo(() => {
+    if (polygonPoints.length !== 4) {
+      return null
+    }
+
+    const averageX =
+      polygonPoints.reduce((sum, point) => sum + point.x, 0) / polygonPoints.length
+    const averageY =
+      polygonPoints.reduce((sum, point) => sum + point.y, 0) / polygonPoints.length
+
+    return {
+      x: averageX + 16,
+      y: averageY - 12,
+    }
+  }, [polygonPoints])
 
   const handleAccountClick = () => {
     console.log('Клик по аккаунту')
@@ -207,6 +324,7 @@ export default function App() {
       latitude,
       longitude,
       polygonCoordinates,
+      savedAreaSquareMeters,
     })
   }
 
@@ -259,11 +377,11 @@ export default function App() {
 
       setLongitude(nextLongitude)
       setLatitude(nextLatitude)
-
-      const nextMapUrl =
-        `https://yandex.ru/map-widget/v1/?ll=${nextLongitude}%2C${nextLatitude}&z=16&lang=ru_RU`
-
-      setMapUrl(nextMapUrl)
+      setMapCenter({
+        lng: nextLongitude,
+        lat: nextLatitude,
+      })
+      setMapZoom(16)
 
       console.log('Карта перемещена на координаты:', {
         latitude: nextLatitude,
@@ -280,13 +398,23 @@ export default function App() {
 
   const handlePolygonReset = () => {
     setPolygonPoints([])
+    setSavedAreaSquareMeters(null)
+    setIsPolygonHovered(false)
     console.log('Полигон сброшен')
   }
 
   const handlePolygonSubmit = () => {
-    console.log('Заглушка ввода полигона:', {
-      serviceTag: selectedServiceTag,
+    if (polygonPoints.length !== 4) {
+      console.log('Сначала нужно поставить 4 точки')
+      return
+    }
+
+    setSavedAreaSquareMeters(currentPolygonAreaSquareMeters)
+
+    console.log('Площадь сохранена:', {
+      areaSquareMeters: currentPolygonAreaSquareMeters,
       polygonCoordinates,
+      serviceTag: selectedServiceTag,
     })
   }
 
@@ -299,9 +427,20 @@ export default function App() {
       return
     }
 
+    const geoPoint = screenPointToGeo(
+      event.clientX,
+      event.clientY,
+      viewportSize.width,
+      viewportSize.height,
+      mapCenter,
+      mapZoom,
+    )
+
     const nextPoint = {
       x: event.clientX,
       y: event.clientY,
+      lng: geoPoint.lng,
+      lat: geoPoint.lat,
     }
 
     setPolygonPoints((prev) => {
@@ -309,14 +448,14 @@ export default function App() {
 
       console.log('Точки полигона:', nextPoints)
       console.log('Координаты точек:', {
-        point1X: nextPoints[0]?.x ?? null,
-        point1Y: nextPoints[0]?.y ?? null,
-        point2X: nextPoints[1]?.x ?? null,
-        point2Y: nextPoints[1]?.y ?? null,
-        point3X: nextPoints[2]?.x ?? null,
-        point3Y: nextPoints[2]?.y ?? null,
-        point4X: nextPoints[3]?.x ?? null,
-        point4Y: nextPoints[3]?.y ?? null,
+        point1Lng: nextPoints[0]?.lng ?? null,
+        point1Lat: nextPoints[0]?.lat ?? null,
+        point2Lng: nextPoints[1]?.lng ?? null,
+        point2Lat: nextPoints[1]?.lat ?? null,
+        point3Lng: nextPoints[2]?.lng ?? null,
+        point3Lat: nextPoints[2]?.lat ?? null,
+        point4Lng: nextPoints[3]?.lng ?? null,
+        point4Lat: nextPoints[3]?.lat ?? null,
       })
 
       return nextPoints
@@ -390,6 +529,8 @@ export default function App() {
               stroke="rgba(47, 111, 228, 0.9)"
               strokeWidth="3"
               strokeLinejoin="round"
+              onMouseEnter={() => setIsPolygonHovered(true)}
+              onMouseLeave={() => setIsPolygonHovered(false)}
             />
           )}
 
@@ -428,6 +569,31 @@ export default function App() {
           ))}
         </svg>
       </div>
+
+      {polygonPoints.length === 4 && isPolygonHovered && polygonTooltipPosition && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${polygonTooltipPosition.x}px`,
+            top: `${polygonTooltipPosition.y}px`,
+            zIndex: 4,
+            pointerEvents: 'none',
+            padding: '10px 12px',
+            border: '1px solid var(--stroke)',
+            borderRadius: '14px',
+            background: 'var(--surface)',
+            boxShadow: 'var(--shadow-soft)',
+            color: 'var(--text-primary)',
+            fontSize: '13px',
+            fontWeight: 600,
+            lineHeight: 1.35,
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          }}
+        >
+          Площадь области {formatArea(currentPolygonAreaSquareMeters)} м²
+        </div>
+      )}
 
       <div
         className="pageFrame"
